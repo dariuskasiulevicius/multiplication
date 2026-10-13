@@ -7,6 +7,9 @@ export interface World {
   emoji: string
 }
 
+/** A World Badge looks like a World entry: an emoji and a name. */
+export type Badge = World
+
 /** A visual skin: names and draws Worlds and the avatar, never changes rules. */
 export interface Theme {
   id: ThemeId
@@ -25,6 +28,8 @@ export interface Theme {
   }
   /** 7 Challenge Worlds then 3 Legend Worlds (rings to 8 × 8, 9 × 9, 10 × 10). */
   worlds: World[]
+  /** World Badge for completing each World, in the same order; a mystery until earned. */
+  badges: Badge[]
   cheers: Record<Lang, string[]>
 }
 
@@ -57,6 +62,18 @@ export const THEMES: Record<ThemeId, Theme> = {
       w('💥', 'Supernova', 'Supernova'),
       w('✨', 'The Universe', 'Visata'),
     ],
+    badges: [
+      w('🪨', 'Moon Rock', 'Mėnulio akmuo'),
+      w('🛸', 'Flying Saucer', 'Skraidanti lėkštė'),
+      w('💍', "Saturn's Ring", 'Saturno žiedas'),
+      w('🌠', 'Shooting Star', 'Krintanti žvaigždė'),
+      w('🔭', 'Golden Telescope', 'Auksinis teleskopas'),
+      w('👽', 'Friendly Alien', 'Draugiškas ateivis'),
+      w('🗝️', 'Black Hole Key', 'Juodosios skylės raktas'),
+      w('🗺️', 'Galaxy Map', 'Galaktikos žemėlapis'),
+      w('☀️', 'Star Heart', 'Žvaigždės širdis'),
+      w('👑', 'Crown of the Universe', 'Visatos karūna'),
+    ],
     cheers: {
       en: ['Lift-off!', 'Stellar!', 'Warp speed!', 'Out of this world!'],
       lt: ['Kylam!', 'Kosmiška!', 'Šviesos greičiu!', 'Nežemiška!'],
@@ -87,6 +104,18 @@ export const THEMES: Record<ThemeId, Theme> = {
       w('🌊', 'Seven Seas', 'Septynios jūros'),
       w('⛵', 'Golden Fleet', 'Auksinis laivynas'),
       w('👑', 'Legendary Treasure', 'Legendinis lobis'),
+    ],
+    badges: [
+      w('🦜', 'Talking Parrot', 'Kalbanti papūga'),
+      w('🗡️', 'Silver Cutlass', 'Sidabrinis kardas'),
+      w('🧭', 'Golden Compass', 'Auksinis kompasas'),
+      w('💎', 'Fire Gem', 'Ugnies brangakmenis'),
+      w('🦷', 'Kraken Tooth', 'Krakeno dantis'),
+      w('🏮', 'Ghost Lantern', 'Vaiduoklių žibintas'),
+      w('🗺️', 'Treasure Map', 'Lobio žemėlapis'),
+      w('⚓', 'Golden Anchor', 'Auksinis inkaras'),
+      w('🔭', "Captain's Spyglass", 'Kapitono žiūronas'),
+      w('👑', "Pirate King's Crown", 'Piratų karaliaus karūna'),
     ],
     cheers: {
       en: ['Arrr!', 'Ahoy, matey!', 'Treasure!', 'Full sail!'],
@@ -119,6 +148,18 @@ export const THEMES: Record<ThemeId, Theme> = {
       w('💠', 'Diamond Sky', 'Deimantinis dangus'),
       w('👑', 'Rainbow Throne', 'Vaivorykštės sostas'),
     ],
+    badges: [
+      w('🎀', 'Rainbow Bow', 'Vaivorykštės kaspinas'),
+      w('🔮', 'Crystal Ball', 'Krištolo rutulys'),
+      w('🧁', 'Magic Cupcake', 'Stebuklingas keksiukas'),
+      w('🪽', 'Cloud Wings', 'Debesų sparnai'),
+      w('🌟', 'Wishing Star', 'Norų žvaigždė'),
+      w('🪄', 'Moon Wand', 'Mėnulio lazdelė'),
+      w('💐', 'Valley Bouquet', 'Slėnio puokštė'),
+      w('🦋', 'Aurora Butterfly', 'Pašvaistės drugelis'),
+      w('💖', 'Sparkling Heart', 'Spindinti širdelė'),
+      w('👑', 'Rainbow Tiara', 'Vaivorykštės diadema'),
+    ],
     cheers: {
       en: ['Magical!', 'Sparkly!', 'Wonderful!', 'Pure magic!'],
       lt: ['Stebuklinga!', 'Spindi!', 'Nuostabu!', 'Tikra magija!'],
@@ -149,6 +190,18 @@ export const THEMES: Record<ThemeId, Theme> = {
       w('🏆', 'Pet Show', 'Gyvūnų paroda'),
       w('🦁', 'Safari', 'Safaris'),
       w('🌟', 'Pet Paradise', 'Gyvūnų rojus'),
+    ],
+    badges: [
+      w('🦴', 'Golden Bone', 'Auksinis kaulas'),
+      w('🧶', 'Ball of Yarn', 'Siūlų kamuolys'),
+      w('🥕', 'Crunchy Carrot', 'Traški morka'),
+      w('🌻', 'Sunflower', 'Saulėgrąža'),
+      w('🍎', 'Pony Apple', 'Ponio obuolys'),
+      w('🎋', 'Lucky Bamboo', 'Laimingasis bambukas'),
+      w('🍁', 'Maple Leaf', 'Klevo lapas'),
+      w('🏅', 'Show Medal', 'Parodos medalis'),
+      w('📸', 'Safari Camera', 'Safario fotoaparatas'),
+      w('🏆', 'Pet Paradise Cup', 'Gyvūnų rojaus taurė'),
     ],
     cheers: {
       en: ['Woof!', 'Purr-fect!', 'Good job!', 'Paw-some!'],

@@ -1,4 +1,5 @@
 import { del, get, set } from 'idb-keyval'
+import { migrateKid } from '../core/kid'
 import { uid } from '../core/rng'
 import type { KidState } from '../core/types'
 import type { SetupPayload } from '../core/setupLink'
@@ -27,7 +28,8 @@ const DEVICE = 'deviceId'
 const PARENT = 'parent'
 
 export async function loadKid(): Promise<KidState | null> {
-  return (await get<KidState>(KID)) ?? null
+  const kid = await get<KidState>(KID)
+  return kid ? migrateKid(kid) : null
 }
 
 export async function saveKid(): Promise<void> {

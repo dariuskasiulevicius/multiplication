@@ -21,8 +21,8 @@ import type {
 } from './types'
 
 export const DAILY_CAP_MS = 9 * 60_000
-export const DEFAULT_RECALL_BUDGET_MS = 4000
-export const DEFAULT_LEGEND_RECALL_BUDGET_MS = 3000
+export const DEFAULT_RECALL_BUDGET_MS = 10_000
+export const DEFAULT_LEGEND_RECALL_BUDGET_MS = 6000
 const HISTORY_DAYS = 120
 const DAY_SAMPLES = 300
 
@@ -63,6 +63,18 @@ export function createKid(o: NewKid): KidState {
     lastSyncAt: null,
     inactive: false,
   }
+}
+
+/**
+ * Bring stored progress up to date. Kids still on the first release's
+ * Recall Budget defaults (4 s / 3 s) move to the current defaults.
+ */
+export function migrateKid(kid: KidState): KidState {
+  if (kid.settings.recallBudgetMs === 4000 && kid.settings.legendRecallBudgetMs === 3000) {
+    kid.settings.recallBudgetMs = DEFAULT_RECALL_BUDGET_MS
+    kid.settings.legendRecallBudgetMs = DEFAULT_LEGEND_RECALL_BUDGET_MS
+  }
+  return kid
 }
 
 /** Number of the Play Day being played on `date` (or just earned on it). */

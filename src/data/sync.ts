@@ -2,6 +2,7 @@
 // and docs/adr/0001). Bodies go as text/plain so the browser sends a simple
 // CORS request without a preflight, which Apps Script cannot answer.
 
+import { migrateKid } from '../core/kid'
 import type { Batch, KidState, SyncConfig, Tier } from '../core/types'
 
 export interface SheetResponse {
@@ -89,7 +90,7 @@ export function fromSnapshot(json: string, local: Pick<KidState, 'deviceId' | 's
     const s = JSON.parse(json)
     if (s?.version !== 1 || typeof s.kidId !== 'string' || !s.facts || Object.keys(s.facts).length !== 100) return null
     if (!s.journey || !Array.isArray(s.journey.playDays)) return null
-    return {
+    return migrateKid({
       ...s,
       deviceId: local.deviceId,
       sync: local.sync,
@@ -97,7 +98,7 @@ export function fromSnapshot(json: string, local: Pick<KidState, 'deviceId' | 's
       pending: [],
       lastSyncAt: null,
       inactive: false,
-    } as KidState
+    } as KidState)
   } catch {
     return null
   }

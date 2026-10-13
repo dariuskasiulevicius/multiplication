@@ -124,6 +124,16 @@ export const en = {
   },
   placementZero: "Great start! Let's learn together.",
   capReached: "That's 9 minutes — great work! Rest your brain until tomorrow.",
+  mysteryBadge: 'Mystery badge — reach Play Day {n} to find out what it is!',
+  mysteryBadgeLabel: 'Mystery badge',
+  tapToOpen: 'Tap to open!',
+  congrats: 'Congratulations!',
+  worldCompleted: 'You completed {world}!',
+  youEarned: 'You earned:',
+  badgeItem: '{badge} badge',
+  shieldItem: 'A Shield for your streak',
+  worldUnlocked: 'New world: {world}',
+  awesome: 'Awesome!',
 
   // Parent menu
   gateTitle: 'For grown-ups',
