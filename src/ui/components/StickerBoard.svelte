@@ -1,5 +1,6 @@
 <script lang="ts">
   import { factId } from '../../core/facts'
+  import { nextStep } from '../../core/mastery'
   import type { KidState } from '../../core/types'
   import { t } from '../../i18n/index.svelte'
 
@@ -8,7 +9,8 @@
 
   const N = Array.from({ length: 10 }, (_, i) => i + 1)
   const pickedFact = $derived(picked ? kid.facts[picked] : null)
-  const ICON = { unseen: '', bronze: '●', silver: '◆', gold: '★', diamond: '✦' } as const
+  const ICON = { unseen: '', bronze: '🥉', silver: '🥈', gold: '🥇', diamond: '💎' } as const
+  const step = $derived(pickedFact ? nextStep(pickedFact) : null)
 </script>
 
 <div class="board">
@@ -31,15 +33,31 @@
   {/each}
 </div>
 
-<p class="detail small center">
-  {#if pickedFact}
-    <b>{pickedFact.a} × {pickedFact.b}{pickedFact.tier === 'unseen' ? '' : ` = ${pickedFact.a * pickedFact.b}`}</b>
-    · {t(`tier_${pickedFact.tier}`)}
-    {#if pickedFact.dusty}<br />💨 {t('dustyHint')}{/if}
+<div class="detail small center">
+  {#if pickedFact && step}
+    <p>
+      <b>{pickedFact.a} × {pickedFact.b}{pickedFact.tier === 'unseen' ? '' : ` = ${pickedFact.a * pickedFact.b}`}</b>
+      {#if pickedFact.tier !== 'unseen'}· {ICON[pickedFact.tier]} {t(`tier_${pickedFact.tier}`)}{/if}
+    </p>
+    {#if pickedFact.dusty}<p>💨 {t('dustyHint')}</p>{/if}
+    <p class="next">
+      {#if step.next === 'new'}{t('nextNew')}
+      {:else if step.next === 'bronze'}{t('nextBronze')}
+      {:else if step.next === 'silver'}{t('nextSilver')}
+      {:else if step.next === 'gold'}{t('nextGold', { n: step.days })}
+      {:else if step.next === 'diamond'}{t('nextDiamond', { n: step.days })}
+      {:else}{t('nextMax')}{/if}
+    </p>
   {:else}
-    <span class="muted">● {t('tier_bronze')} · ◆ {t('tier_silver')} · ★ {t('tier_gold')} · ✦ {t('tier_diamond')}</span>
+    <ul class="guide">
+      <li>{t('medalBronze')}</li>
+      <li>{t('medalSilver')}</li>
+      <li>{t('medalGold')}</li>
+      <li>{t('medalDiamond')}</li>
+    </ul>
+    <p class="muted">👆 {t('boardHint')}</p>
   {/if}
-</p>
+</div>
 
 <style>
   .board {
@@ -68,11 +86,10 @@
   }
   .cell i {
     position: absolute;
-    top: 0;
-    right: 2px;
+    top: -3px;
+    right: -3px;
     font-style: normal;
-    font-size: 0.5rem;
-    opacity: 0.7;
+    font-size: 0.55rem;
   }
   .bronze {
     background: var(--bronze);
@@ -96,6 +113,21 @@
   }
   .detail {
     min-height: 2.6em;
-    margin-top: 8px;
+    margin-top: 10px;
+    display: grid;
+    gap: 6px;
+  }
+  .next {
+    font-weight: 800;
+    color: var(--accent);
+  }
+  .guide {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 4px;
+    text-align: left;
+    font-weight: 600;
   }
 </style>
