@@ -6,6 +6,7 @@ import {
   DAILY_CAP_MS,
   finishPlacement,
   introduceLesson,
+  migrateKid,
   nextRound,
   playDayNumber,
   recordAnswer,
@@ -81,7 +82,7 @@ describe('answers', () => {
     introduceLesson(k, LESSONS[0], D1)
     const { outcome, targets } = recordAnswer(k, { a: 1, b: 7, given: 7, ms: 1500, round: 'new', date: D1, now })
     expect(outcome).toMatchObject({ correct: true, fast: true, tierAfter: 'silver' })
-    expect(targets).toEqual({ baselineMs: 1200, targetMs: 5200, legendTargetMs: 4200 })
+    expect(targets).toEqual({ baselineMs: 1200, targetMs: 11_200, legendTargetMs: 7200 })
     expect(k.outbox[0]).toMatchObject({ a: 1, b: 7, given: 7, baselineMs: 1200, fast: true })
     round(k, 'new')
     expect(k.outbox).toEqual([])
@@ -101,7 +102,7 @@ describe('answers', () => {
   it('judges speed by the Legend Recall Budget during Legend', () => {
     const k = kid()
     k.journey.playDays = Array.from({ length: 49 }, (_, i) => `2026-08-${String(i + 1).padStart(2, '0')}`)
-    expect(targetsFor(k, D1, 42).targetMs).toBe(1800 + 3000)
+    expect(targetsFor(k, D1, 42).targetMs).toBe(1800 + 6000)
   })
 
   it('remembers the best Speed Round', () => {
@@ -109,5 +110,21 @@ describe('answers', () => {
     expect(completeRound(k, { kind: 'speed', core: true, playMs: 1, roundMs: 30_000, date: D1 }).newBest).toBe(false)
     expect(completeRound(k, { kind: 'speed', core: true, playMs: 1, roundMs: 25_000, date: D1 }).newBest).toBe(true)
     expect(k.bestSpeedRoundMs).toBe(25_000)
+  })
+})
+
+describe('migrateKid', () => {
+  it('moves Kids on the first release defaults to the current Recall Budgets', () => {
+    const k = kid()
+    k.settings.recallBudgetMs = 4000
+    k.settings.legendRecallBudgetMs = 3000
+    expect(migrateKid(k).settings).toMatchObject({ recallBudgetMs: 10_000, legendRecallBudgetMs: 6000 })
+  })
+
+  it('keeps a budget the Parent chose', () => {
+    const k = kid()
+    k.settings.recallBudgetMs = 4000
+    k.settings.legendRecallBudgetMs = 2500
+    expect(migrateKid(k).settings).toMatchObject({ recallBudgetMs: 4000, legendRecallBudgetMs: 2500 })
   })
 })

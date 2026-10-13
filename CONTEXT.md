@@ -45,11 +45,11 @@ _Avoid_: Table, row
 A Kid's current pure typing time for a 1-digit or a 2-digit number, measured during Warm-up.
 
 **Recall Budget**:
-The extra time allowed on top of Baseline to recall a Fact — 4 s by default, adjustable per Kid by the Parent.
+The extra time allowed on top of Baseline to recall a Fact — 10 s by default, adjustable per Kid by the Parent.
 _Avoid_: Bonus time, grace period
 
 **Legend Recall Budget**:
-The stricter Recall Budget — 3 s by default, adjustable per Kid — used to judge Diamond at any time and all speed during Legend.
+The stricter Recall Budget — 6 s by default, adjustable per Kid — used to judge Diamond at any time and all speed during Legend.
 
 **Target Time**:
 Baseline for the answer's digit count plus Recall Budget (or Legend Recall Budget during Legend).
@@ -115,6 +115,10 @@ _Avoid_: Chapter, level, week
 **Legend World**:
 One of the three Worlds of Legend, each a ring that grows the Journey Grid's square: to 8 × 8 (Play Day 64, 15 Play Days), 9 × 9 (Play Day 81, 17 Play Days) and 10 × 10 (Play Day 100, 19 Play Days).
 
+**World Badge**:
+A themed collectible earned by completing a World; until then its goal cell on the Journey Grid shows it as a Mystery Badge, and reaching the goal reveals it with a celebration.
+_Avoid_: Trophy, achievement, medal
+
 **Speed Trial**:
 A 20-question test at the end of a World — about half Facts Introduced in that World, the rest the Kid's Weak Facts — scored 1–3 Stars (50 / 75 / 90 % Fast Answers); it can be retried in Bonus time, only the best attempt counts, and it never blocks progress.
 _Avoid_: Boss, exam, test
@@ -146,7 +150,7 @@ A purely visual avatar item with no effect on play.
 A random reward (Stars or a Cosmetic) given when a Play Day is earned.
 
 **Theme**:
-A visual skin — Space, Pirates, Unicorn or Pets — that names and draws Worlds and the avatar but never changes rules; a Kid may switch Theme at any time without losing progress.
+A visual skin — Space, Pirates, Unicorn or Pets — that names and draws Worlds, World Badges and the avatar but never changes rules; a Kid may switch Theme at any time without losing progress.
 _Avoid_: Skin, world (a World is a stage, not a Theme)
 
 **Journey Grid**:
@@ -181,7 +185,7 @@ The settings area on a Kid's device, behind an adult gate.
 - A **Session** starts with one **Warm-up** and contains zero or more **Rounds**
 - A **Play Day** is earned once per calendar day, when **Core Rounds** are finished; Core Rounds left unfinished at midnight are lost, but their answers still count toward **Facts**
 - Each **Session** starts with its own **Warm-up**, even when continuing the same day's **Core Rounds**
-- A **World** ends with one **Speed Trial** and earns one **Shield** on completion
+- A **World** ends with one **Speed Trial**; completing it reveals its **World Badge** and earns one **Shield** (if fewer than 2 are held)
 - The **Challenge** has 7 **Worlds** of 7 **Play Days** (the 7 × 7 square), then **Legend** with 3 **Legend Worlds** (rings to 8 × 8, 9 × 9, 10 × 10), then **Free Play**
 - The **Journey Grid** (Play Days) and the **Sticker Board** (Facts) are both 10 × 10; the finish line is both full
 - **Target Time** = **Baseline** + **Recall Budget**; a **Fast Answer** beats it

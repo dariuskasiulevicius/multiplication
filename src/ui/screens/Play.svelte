@@ -24,6 +24,7 @@
   import { app, saveKid, syncNow } from '../../data/store.svelte'
   import { i18n, seconds, t, type Key } from '../../i18n/index.svelte'
   import type { Theme } from '../../themes'
+  import BadgeReveal from '../components/BadgeReveal.svelte'
   import Confetti from '../components/Confetti.svelte'
   import DotGrid from '../components/DotGrid.svelte'
   import Numpad from '../components/Numpad.svelte'
@@ -80,6 +81,8 @@
   let placementKnown = $state(0)
   let newGold = $state(0)
   let fire = $state(0)
+  /** A World was completed this round: show its World Badge reveal. */
+  let revealing = $state(false)
   const after = $derived(stage === 'summary' ? nextRound(kid, date) : null)
 
   onMount(() => {
@@ -315,6 +318,7 @@
     }
     result = completeRound(kid, { kind, core: r.core, playMs: activeMs, roundMs: Math.round(answerMs), date })
     stage = 'summary'
+    revealing = result.earned?.worldCompleted != null
     fire++
     if (result.earned) sfx.dayDone()
     else sfx.roundEnd()
@@ -440,6 +444,10 @@
           {#if e.shieldsUsed.length}<p>🛡️ {t('shieldUsed', { n: e.shieldsUsed.length })}</p>{/if}
           {#if e.worldCompleted}
             <p class="world">🏁 {t('worldDone', { world: worldName(e.worldCompleted) })}</p>
+            <p>
+              {theme.badges[e.worldCompleted - 1].emoji}
+              {t('badgeItem', { badge: theme.badges[e.worldCompleted - 1].name[i18n.lang] })}
+            </p>
             {#if e.worldCompleted < 10}<p>{t('nextWorld', { world: worldName(worldOf(e.playDay + 1)) })}</p>{/if}
           {/if}
           {#if e.shieldEarned}<p>{t('shieldEarned')}</p>{/if}
@@ -461,6 +469,16 @@
 </main>
 
 {#if toast}<div class="toast pop">{toast}</div>{/if}
+{#if revealing && result?.earned?.worldCompleted}
+  {@const w = result.earned.worldCompleted}
+  <BadgeReveal
+    badge={theme.badges[w - 1]}
+    world={worldName(w)}
+    nextWorld={w < 10 ? worldName(worldOf(result.earned.playDay + 1)) : null}
+    shield={result.earned.shieldEarned}
+    onclose={() => (revealing = false)}
+  />
+{/if}
 <Confetti {fire} />
 
 <style>

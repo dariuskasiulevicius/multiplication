@@ -1,6 +1,6 @@
 # Fast Answers are judged against a per-Kid Target Time, not fixed seconds
 
-The Kids are of mixed ages and type at very different speeds on their own devices, so a fixed threshold (the common "answer within 3 s" automaticity benchmark) would measure finger speed as much as recall: too strict for a 7-year-old tapping a 2-digit answer, too lax for an 11-year-old. Instead every Session opens with a Warm-up of five "type the number you see" taps; a rolling median of recent taps gives a separate 1-digit and 2-digit Baseline, and Target Time = Baseline for the answer's digit count + Recall Budget (4 s by default, 3 s Legend Recall Budget, both adjustable per Kid by the Parent).
+The Kids are of mixed ages and type at very different speeds on their own devices, so a fixed threshold (the common "answer within 3 s" automaticity benchmark) would measure finger speed as much as recall: too strict for a 7-year-old tapping a 2-digit answer, too lax for an 11-year-old. Instead every Session opens with a Warm-up of five "type the number you see" taps; a rolling median of recent taps gives a separate 1-digit and 2-digit Baseline, and Target Time = Baseline for the answer's digit count + Recall Budget (10 s by default, 6 s Legend Recall Budget, both adjustable per Kid by the Parent).
 
 ## Considered Options
 

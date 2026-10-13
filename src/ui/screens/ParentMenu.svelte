@@ -126,7 +126,7 @@
         <input
           type="range"
           min="1"
-          max="8"
+          max="15"
           step="0.5"
           value={kid.settings.recallBudgetMs / 1000}
           oninput={(e) => setBudget('recallBudgetMs', Number(e.currentTarget.value))}
@@ -139,7 +139,7 @@
         <input
           type="range"
           min="1"
-          max="8"
+          max="15"
           step="0.5"
           value={kid.settings.legendRecallBudgetMs / 1000}
           oninput={(e) => setBudget('legendRecallBudgetMs', Number(e.currentTarget.value))}
