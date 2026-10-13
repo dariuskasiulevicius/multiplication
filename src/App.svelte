@@ -82,9 +82,20 @@
     <ParentMenu kid={app.kid} />
   {/if}
 </div>
+<!-- Solid backing under the iPhone status bar, so content never scrolls under it blurred. -->
+<div class="status-backing" style="background: {theme.colors.bg1}"></div>
 
 <style>
   .app {
     min-height: 100dvh;
+  }
+  .status-backing {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: env(safe-area-inset-top, 0px);
+    z-index: 45;
+    pointer-events: none;
   }
 </style>

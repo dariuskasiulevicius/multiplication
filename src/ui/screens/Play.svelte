@@ -609,7 +609,7 @@
   }
   .toast {
     position: fixed;
-    top: max(70px, calc(env(safe-area-inset-top) + 56px));
+    top: calc(env(safe-area-inset-top, 0px) + 72px);
     left: 50%;
     translate: -50% 0;
     background: rgba(0, 0, 0, 0.75);
