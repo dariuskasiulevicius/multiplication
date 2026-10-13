@@ -118,6 +118,29 @@ export function rankWeak(facts: Record<FactId, FactState>, recentDays: readonly 
     .map(([id]) => id)
 }
 
+export interface NextStep {
+  /** The medal (Tier) to aim for next, `new` if not taught yet, `max` at Diamond. */
+  next: 'new' | 'bronze' | 'silver' | 'gold' | 'diamond' | 'max'
+  /** Days still needed for Gold or Diamond. */
+  days: number
+}
+
+/** What a Kid has to do for the Fact's next medal. */
+export function nextStep(f: FactState): NextStep {
+  switch (f.tier) {
+    case 'unseen':
+      return { next: f.introduced ? 'bronze' : 'new', days: 0 }
+    case 'bronze':
+      return { next: 'silver', days: 0 }
+    case 'silver':
+      return { next: 'gold', days: DAYS_FOR_GOLD - f.fastDays.length }
+    case 'gold':
+      return { next: 'diamond', days: DAYS_FOR_GOLD - f.legendFastDays.length }
+    case 'diamond':
+      return { next: 'max', days: 0 }
+  }
+}
+
 export function countTiers(facts: Record<FactId, FactState>): Record<Tier, number> {
   const counts: Record<Tier, number> = { unseen: 0, bronze: 0, silver: 0, gold: 0, diamond: 0 }
   for (const f of Object.values(facts)) counts[f.tier]++

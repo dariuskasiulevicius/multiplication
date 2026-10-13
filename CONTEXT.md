@@ -211,5 +211,6 @@ The settings area on a Kid's device, behind an adult gate.
 - "Legend" named both the late phase and the top speed standard — resolved: **Legend** is the phase (Play Day 50+); Diamond and **Legend Target Time** are tracked from Play Day 1.
 - Legend milestones were "every 10 Play Days" — resolved: milestones are the square numbers 64, 81 and 100, each closing a **Legend World**.
 - "level" was used for both **Tier** and **World** — resolved: avoid "level".
+- Kids did not understand "streak" or "tier" — resolved: the kid-facing screens say "fire" (🔥, LT "ugnelė") for the **Streak** and "medal" (🥉 🥈 🥇 💎) for a **Tier**; the domain terms stay as defined here.
 - Mastery was first counted in **Play Days** — resolved: any day with a Fast Answer counts, even if that day's **Core Rounds** were not finished, because those answers still count toward **Facts**.
 - A slow Kid could need more than 9 minutes for all **Core Rounds** — resolved: reaching the **Daily Cap** also earns the **Play Day**, so the daily time promise always holds.

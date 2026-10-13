@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte'
   import { today } from '../../core/dates'
   import { CHALLENGE_DAYS, LEGEND_DAYS, viewStreak, worldOf } from '../../core/journey'
   import { nextRound, phaseFor, playDayNumber } from '../../core/kid'
@@ -8,6 +9,7 @@
   import { fetchSnapshot, fromSnapshot } from '../../data/sync'
   import { i18n, t } from '../../i18n/index.svelte'
   import type { Theme } from '../../themes'
+  import HelpSheet from '../components/HelpSheet.svelte'
   import JourneyGrid from '../components/JourneyGrid.svelte'
   import LangToggle from '../components/LangToggle.svelte'
   import StickerBoard from '../components/StickerBoard.svelte'
@@ -18,6 +20,13 @@
   const date = today()
   let tab = $state<'journey' | 'stickers'>('journey')
   let picking = $state(false)
+  let helping = $state(false)
+  let tip = $state<'fire' | 'shield' | null>(null)
+
+  // The "How to play" sheet opens by itself the first time.
+  onMount(() => {
+    if (!kid.helpSeen) helping = true
+  })
 
   // New versions install here, between Rounds, never mid-game.
   $effect(() => {
@@ -36,6 +45,14 @@
     if (next.index === 1) return `▶ ${t('playStart')}`
     return `▶ ${t('playContinue', { done: next.index - 1, total: next.total })}`
   })
+
+  async function closeHelp() {
+    helping = false
+    if (!kid.helpSeen) {
+      kid.helpSeen = true
+      await saveKid()
+    }
+  }
 
   async function changeTheme(id: ThemeId) {
     kid.settings.theme = id
@@ -61,11 +78,27 @@
       <b>{kid.name}</b>
     </button>
     <span class="spacer"></span>
-    <span class="pill" title={t('streak')}>🔥 {streak.streak}</span>
-    <span class="pill" title={t('shields')}>🛡️ {kid.journey.shields}</span>
+    <button class="pill" class:on={tip === 'fire'} aria-label={t('streak')} onclick={() => (tip = tip === 'fire' ? null : 'fire')}>
+      🔥 {streak.streak}
+    </button>
+    <button class="pill" class:on={tip === 'shield'} aria-label={t('shields')} onclick={() => (tip = tip === 'shield' ? null : 'shield')}>
+      🛡️ {kid.journey.shields}
+    </button>
     <LangToggle compact />
     <button class="icon-btn" aria-label={t('parentMenu')} onclick={() => (app.screen = 'parent')}>⚙️</button>
   </header>
+
+  {#if tip}
+    <button class="bubble pop {tip}" onclick={() => (tip = null)}>
+      {#if tip === 'fire'}
+        {streak.streak > 0 ? t('tipFire', { n: streak.streak }) : t('tipFire0')}
+        <span class="muted small">{t('helpFire')}</span>
+      {:else}
+        <b>🛡️ {t('tipShields', { n: kid.journey.shields })}</b>
+        <span class="muted small">{t('helpShield')}</span>
+      {/if}
+    </button>
+  {/if}
 
   {#if kid.inactive}
     <div class="card stack center">
@@ -111,7 +144,13 @@
       <StickerBoard {kid} />
     {/if}
   </section>
+
+  <button class="btn ghost" onclick={() => (helping = true)}>❓ {t('helpButton')}</button>
 </main>
+
+{#if helping}
+  <HelpSheet onclose={closeHelp} />
+{/if}
 
 {#if picking}
   <div class="sheet" role="dialog" aria-modal="true">
@@ -137,6 +176,40 @@
   header .pill {
     white-space: nowrap;
     padding: 6px 10px;
+    border: 0;
+  }
+  header .pill.on {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  .bubble {
+    position: relative;
+    border: 0;
+    text-align: left;
+    display: grid;
+    gap: 6px;
+    padding: 14px 16px;
+    border-radius: var(--radius);
+    background: rgba(255, 255, 255, 0.95);
+    color: #1d1442;
+    font-weight: 700;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  }
+  .bubble::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    right: 120px;
+    border: 8px solid transparent;
+    border-top: 0;
+    border-bottom-color: rgba(255, 255, 255, 0.95);
+  }
+  /* Arrow under the pill that was tapped (header items are right-aligned). */
+  .bubble.fire::before {
+    right: 176px;
+  }
+  .bubble .muted {
+    color: #4a4270;
+    font-weight: 600;
   }
   .me {
     min-width: 0;

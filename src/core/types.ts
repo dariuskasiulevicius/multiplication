@@ -137,4 +137,6 @@ export interface KidState {
   lastSyncAt: string | null
   /** Set when the Family Sheet says another device is now the Active Device. */
   inactive: boolean
+  /** The Kid has seen the "How to play" sheet (opened automatically once). */
+  helpSeen?: boolean
 }

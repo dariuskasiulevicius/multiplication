@@ -135,6 +135,44 @@ export const en = {
   worldUnlocked: 'New world: {world}',
   awesome: 'Awesome!',
 
+  // Help for kids
+  helpButton: 'How to play?',
+  helpTitle: 'How to play',
+  helpMission: '▶ Every day, press the big button and play your mission: about 5 short rounds, 5–9 minutes. Then come back tomorrow!',
+  helpFire: '🔥 Fire = how many days in a row you played. Play every day to keep it burning! Miss a day and it goes out — unless a Shield saves it.',
+  helpShield: '🛡️ A Shield saves your fire if you miss a day. It works by itself. You get a new Shield when you finish a world (you can hold 2).',
+  helpMedals: 'Every fact on your Sticker board can win a medal:',
+  medalBronze: '🥉 Bronze — answer it right',
+  medalSilver: '🥈 Silver — answer it fast, before the green bar runs out ⚡',
+  medalGold: '🥇 Gold — fast on 3 different days',
+  medalDiamond: '💎 Diamond — super fast on 3 different days',
+  helpDusty: '💨 A mistake makes a medal dusty. Answer fast again to polish it. You never lose a medal!',
+  helpBadges: '❓ A mystery badge waits at the end of every world on your Journey. Reach it to find out what is inside!',
+  helpWorlds: '🗺️ 7 worlds × 7 days = 49 days. Then Legend, all the way to 10 × 10 = 100 days!',
+  helpClose: 'Got it!',
+  tipFire0: 'Play today to light your fire! 🔥',
+  tipFire: {
+    one: '🔥 {n} day in a row! Play every day to keep your fire burning.',
+    other: '🔥 {n} days in a row! Play every day to keep your fire burning.',
+  },
+  tipShields: {
+    one: 'You have {n} Shield.',
+    other: 'You have {n} Shields.',
+  },
+  boardHint: 'Tap a sticker to see how to get its next medal.',
+  nextNew: 'Not learned yet — it will come in a “New facts” round.',
+  nextBronze: 'Answer it right to get 🥉 Bronze.',
+  nextSilver: 'Answer it fast ⚡ — before the green bar runs out — to get 🥈 Silver.',
+  nextGold: {
+    one: 'Be fast on {n} more day to get 🥇 Gold!',
+    other: 'Be fast on {n} more days to get 🥇 Gold!',
+  },
+  nextDiamond: {
+    one: 'Be super fast on {n} more day to get 💎 Diamond!',
+    other: 'Be super fast on {n} more days to get 💎 Diamond!',
+  },
+  nextMax: 'Diamond — the best medal there is! 💎',
+
   // Parent menu
   gateTitle: 'For grown-ups',
   gateAsk: 'Solve to continue:',

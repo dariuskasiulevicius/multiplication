@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { initialFacts, newFact } from './facts'
-import { applyAnswer, introduce, isDue, rankWeak } from './mastery'
+import { applyAnswer, introduce, isDue, nextStep, rankWeak } from './mastery'
 
 const fast = (date: string) => ({ correct: true, ms: 2000, targetMs: 5000, legendTargetMs: 1500, date })
 const blazing = (date: string) => ({ correct: true, ms: 1000, targetMs: 5000, legendTargetMs: 1500, date })
@@ -77,5 +77,21 @@ describe('mastery', () => {
     applyAnswer(facts['6x8'], { ...slow('2026-10-04'), ms: 9000 })
     applyAnswer(facts['2x2'], fast('2026-10-04'))
     expect(rankWeak(facts, ['2026-10-04', '2026-10-05'])).toEqual(['7x7', '6x8', '2x2'])
+  })
+
+  it('tells the Kid what the next medal needs', () => {
+    const f = newFact(6, 7)
+    expect(nextStep(f)).toEqual({ next: 'new', days: 0 })
+    introduce(f, '2026-10-01')
+    expect(nextStep(f)).toEqual({ next: 'bronze', days: 0 })
+    applyAnswer(f, slow('2026-10-01'))
+    expect(nextStep(f)).toEqual({ next: 'silver', days: 0 })
+    applyAnswer(f, fast('2026-10-01'))
+    expect(nextStep(f)).toEqual({ next: 'gold', days: 2 })
+    applyAnswer(f, fast('2026-10-02'))
+    applyAnswer(f, fast('2026-10-03'))
+    expect(nextStep(f)).toEqual({ next: 'diamond', days: 3 })
+    for (const d of ['2026-10-04', '2026-10-05', '2026-10-06']) applyAnswer(f, blazing(d))
+    expect(nextStep(f)).toEqual({ next: 'max', days: 0 })
   })
 })
