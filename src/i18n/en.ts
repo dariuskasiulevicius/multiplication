@@ -173,6 +173,13 @@ export const en = {
   },
   nextMax: 'Diamond — the best medal there is! 💎',
 
+  // Kid settings
+  settingsTitle: 'Settings',
+  adventure: 'Adventure',
+  soundOn: 'On',
+  soundOff: 'Off',
+  parentLink: 'Settings for parents',
+
   // Parent menu
   gateTitle: 'For grown-ups',
   gateAsk: 'Solve to continue:',

@@ -21,7 +21,7 @@ Play it at **https://dariuskasiulevicius.github.io/multiplication/**
 3. Add each kid's name. You get a **setup link** and a QR code per kid.
 4. Open each link **on that kid's own device**. The kid picks a theme and the first day starts with a short quiz to find what they already know.
 
-The parent menu on a kid's device (⚙️, behind a grown-up maths question) lets you change the Recall Budget, see stats, sync, restore and back up progress.
+On a kid's device, ⚙️ opens the kid's own settings (how to play, language, sound, adventure). The small **Settings for parents** link at the bottom leads, behind a grown-up maths question, to the Recall Budget, stats, sync, restore and backups.
 
 **iPhone / iPad:** a game added to the home screen keeps its own storage, separate from Safari. The setup screen walks the kid through it: copy the setup link, add the game to the home screen, open it from there and tap **Paste setup link**.
 

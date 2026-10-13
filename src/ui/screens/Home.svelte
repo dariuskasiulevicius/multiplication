@@ -11,7 +11,6 @@
   import type { Theme } from '../../themes'
   import HelpSheet from '../components/HelpSheet.svelte'
   import JourneyGrid from '../components/JourneyGrid.svelte'
-  import LangToggle from '../components/LangToggle.svelte'
   import StickerBoard from '../components/StickerBoard.svelte'
   import ThemePicker from '../components/ThemePicker.svelte'
 
@@ -84,8 +83,7 @@
     <button class="pill" class:on={tip === 'shield'} aria-label={t('shields')} onclick={() => (tip = tip === 'shield' ? null : 'shield')}>
       🛡️ {kid.journey.shields}
     </button>
-    <LangToggle compact />
-    <button class="icon-btn" aria-label={t('parentMenu')} onclick={() => (app.screen = 'parent')}>⚙️</button>
+    <button class="icon-btn" aria-label={t('settingsTitle')} onclick={() => (app.screen = 'settings')}>⚙️</button>
   </header>
 
   {#if tip}
@@ -144,8 +142,6 @@
       <StickerBoard {kid} />
     {/if}
   </section>
-
-  <button class="btn ghost" onclick={() => (helping = true)}>❓ {t('helpButton')}</button>
 </main>
 
 {#if helping}
