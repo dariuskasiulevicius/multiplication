@@ -9,6 +9,7 @@
   import { i18n, t } from '../../i18n/index.svelte'
   import type { Theme } from '../../themes'
   import JourneyGrid from '../components/JourneyGrid.svelte'
+  import LangToggle from '../components/LangToggle.svelte'
   import StickerBoard from '../components/StickerBoard.svelte'
   import ThemePicker from '../components/ThemePicker.svelte'
 
@@ -62,6 +63,7 @@
     <span class="spacer"></span>
     <span class="pill" title={t('streak')}>🔥 {streak.streak}</span>
     <span class="pill" title={t('shields')}>🛡️ {kid.journey.shields}</span>
+    <LangToggle compact />
     <button class="icon-btn" aria-label={t('parentMenu')} onclick={() => (app.screen = 'parent')}>⚙️</button>
   </header>
 
@@ -125,7 +127,19 @@
 {/if}
 
 <style>
+  header {
+    gap: 6px;
+  }
+  /* Only the name may shrink on narrow phones. */
+  header > :global(:not(.me)) {
+    flex-shrink: 0;
+  }
+  header .pill {
+    white-space: nowrap;
+    padding: 6px 10px;
+  }
   .me {
+    min-width: 0;
     border: 0;
     background: transparent;
     display: flex;
@@ -133,6 +147,11 @@
     gap: 8px;
     padding: 0;
     font-size: 1.1rem;
+  }
+  .me b {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .avatar {
     font-size: 2rem;

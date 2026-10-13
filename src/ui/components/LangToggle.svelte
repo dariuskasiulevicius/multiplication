@@ -1,7 +1,10 @@
 <script lang="ts">
   import type { Lang } from '../../core/types'
   import { app, saveKid } from '../../data/store.svelte'
-  import { i18n } from '../../i18n/index.svelte'
+  import { i18n, t } from '../../i18n/index.svelte'
+
+  /** `compact`: one round button showing the current language; a tap switches to the other. */
+  let { compact = false }: { compact?: boolean } = $props()
 
   const LANGS: Lang[] = ['en', 'lt']
 
@@ -14,20 +17,31 @@
   }
 </script>
 
-<div class="seg" role="group" aria-label="Language">
-  {#each LANGS as lang (lang)}
-    <button class:on={i18n.lang === lang} onclick={() => choose(lang)}>{lang.toUpperCase()}</button>
-  {/each}
-</div>
+{#if compact}
+  <button class="icon-btn code" aria-label={t('language')} onclick={() => choose(i18n.lang === 'en' ? 'lt' : 'en')}>
+    {i18n.lang.toUpperCase()}
+  </button>
+{:else}
+  <div class="seg" role="group" aria-label={t('language')}>
+    {#each LANGS as lang (lang)}
+      <button class:on={i18n.lang === lang} onclick={() => choose(lang)}>{lang.toUpperCase()}</button>
+    {/each}
+  </div>
+{/if}
 
 <style>
+  .code {
+    font-size: 0.85rem;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+  }
   .seg {
     display: inline-flex;
     background: rgba(255, 255, 255, 0.12);
     border-radius: 999px;
     padding: 3px;
   }
-  button {
+  .seg button {
     border: 0;
     background: transparent;
     border-radius: 999px;
@@ -35,7 +49,7 @@
     font-weight: 800;
     font-size: 0.85rem;
   }
-  button.on {
+  .seg button.on {
     background: var(--accent);
     color: var(--accent-text);
   }
