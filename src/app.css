@@ -60,7 +60,8 @@ p {
   max-width: 560px;
   margin: 0 auto;
   min-height: 100dvh;
-  padding: max(16px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom));
+  /* Clear the iPhone status bar (and its blur) with room to spare, not just touching it. */
+  padding: calc(env(safe-area-inset-top, 0px) + 20px) 16px calc(env(safe-area-inset-bottom, 0px) + 20px);
   display: flex;
   flex-direction: column;
   gap: 16px;
