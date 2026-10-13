@@ -65,11 +65,11 @@ A correct answer given within Target Time.
 A correct answer given after Target Time; counts as correct but earns no speed credit.
 
 **Mastered**:
-A Fact that received Fast Answers on 3 different Play Days.
+A Fact that received Fast Answers on 3 different days of play.
 _Avoid_: Learned, known, done
 
 **Tier**:
-A Fact's visible level: Unseen → Bronze (answered correctly once) → Silver (one Fast Answer) → Gold (Mastered) → Diamond (within Legend Target Time on 3 different Play Days, earnable before Legend too).
+A Fact's visible level: Unseen → Bronze (answered correctly once) → Silver (one Fast Answer) → Gold (Mastered) → Diamond (within Legend Target Time on 3 different days of play, earnable before Legend too).
 _Avoid_: Level, rank
 
 **Dusty**:
@@ -94,7 +94,7 @@ The fixed set of Rounds (about 5 normally, 3 in Legend) that must be finished to
 An optional Round played after Core Rounds, allowed until the Daily Cap.
 
 **Daily Cap**:
-9 minutes of play per calendar day, summed over all Sessions; after it the game sends the Kid away until tomorrow.
+9 minutes of play per calendar day, summed over all Sessions; reaching it ends the day's play and earns the Play Day even if Core Rounds are unfinished.
 
 **Session**:
 One continuous sitting in the app, from opening to leaving; a Play Day's Core Rounds may be spread over several Sessions on the same calendar day.
@@ -102,7 +102,7 @@ One continuous sitting in the app, from opening to leaving; a Play Day's Core Ro
 ### Challenge
 
 **Play Day**:
-A calendar day (device local date) on which the Kid finished Core Rounds.
+A calendar day (device local date) on which the Kid finished Core Rounds or reached the Daily Cap.
 _Avoid_: Day (alone), lesson
 
 **Challenge**:
@@ -185,7 +185,8 @@ The settings area on a Kid's device, behind an adult gate.
 - The **Challenge** has 7 **Worlds** of 7 **Play Days** (the 7 × 7 square), then **Legend** with 3 **Legend Worlds** (rings to 8 × 8, 9 × 9, 10 × 10), then **Free Play**
 - The **Journey Grid** (Play Days) and the **Sticker Board** (Facts) are both 10 × 10; the finish line is both full
 - **Target Time** = **Baseline** + **Recall Budget**; a **Fast Answer** beats it
-- A **Fact** becomes **Mastered** (Gold) after **Fast Answers** on 3 different **Play Days**; Fast Answers in the **Placement Quiz** count toward this
+- A **Fact** becomes **Mastered** (Gold) after **Fast Answers** on 3 different days; Fast Answers in the **Placement Quiz** count toward this
+- A New Facts **Round** turns into a **Weak Fact** Round when 6 or more Facts were missed in the last 3 **Play Days** — consolidate before adding more
 - A **Parent** creates one **Setup Link** per **Kid**; all **Kids** **Sync** into one **Family Sheet**
 
 ## Example dialogue
@@ -193,7 +194,7 @@ The settings area on a Kid's device, behind an adult gate.
 > **Dev:** "A **Kid** missed Tuesday. Is the **Streak** lost?"
 > **Parent:** "Not if a **Shield** is left — it's used automatically. But Tuesday still isn't a **Play Day**, so it doesn't count toward the next **World**."
 > **Dev:** "And 7 × 8 answered correctly but slowly every day this week?"
-> **Parent:** "Those are **Slow Answers** — correct, so it's Bronze, but it only turns Gold after **Fast Answers** on 3 different **Play Days**."
+> **Parent:** "Those are **Slow Answers** — correct, so it's Bronze, but it only turns Gold after **Fast Answers** on 3 different days."
 > **Dev:** "Fast against what — 3 seconds?"
 > **Parent:** "No fixed number. **Target Time** is that Kid's own typing **Baseline** plus the **Recall Budget**."
 
@@ -206,3 +207,5 @@ The settings area on a Kid's device, behind an adult gate.
 - "Legend" named both the late phase and the top speed standard — resolved: **Legend** is the phase (Play Day 50+); Diamond and **Legend Target Time** are tracked from Play Day 1.
 - Legend milestones were "every 10 Play Days" — resolved: milestones are the square numbers 64, 81 and 100, each closing a **Legend World**.
 - "level" was used for both **Tier** and **World** — resolved: avoid "level".
+- Mastery was first counted in **Play Days** — resolved: any day with a Fast Answer counts, even if that day's **Core Rounds** were not finished, because those answers still count toward **Facts**.
+- A slow Kid could need more than 9 minutes for all **Core Rounds** — resolved: reaching the **Daily Cap** also earns the **Play Day**, so the daily time promise always holds.
