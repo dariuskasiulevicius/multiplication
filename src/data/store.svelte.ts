@@ -5,7 +5,7 @@ import type { KidState } from '../core/types'
 import type { SetupPayload } from '../core/setupLink'
 import { pushBatches } from './sync'
 
-export type Screen = 'loading' | 'welcome' | 'parentSetup' | 'onboarding' | 'home' | 'play' | 'parent'
+export type Screen = 'loading' | 'welcome' | 'parentSetup' | 'onboarding' | 'home' | 'play' | 'settings' | 'parent'
 
 export interface ParentConfig {
   url: string

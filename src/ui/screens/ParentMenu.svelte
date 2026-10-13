@@ -8,7 +8,6 @@
   import { fetchSnapshot, fromSnapshot, snapshotOf } from '../../data/sync'
   import { i18n, seconds, t, type Key } from '../../i18n/index.svelte'
   import Gate from '../components/Gate.svelte'
-  import LangToggle from '../components/LangToggle.svelte'
 
   let { kid }: { kid: KidState } = $props()
 
@@ -20,17 +19,12 @@
   const weak = $derived(rankWeak(kid.facts, recentDays(kid, date)).slice(0, 8))
   const days = $derived([...kid.history].reverse().slice(0, 14))
 
-  function home() {
-    app.screen = 'home'
+  function back() {
+    app.screen = 'settings'
   }
 
   async function setBudget(field: 'recallBudgetMs' | 'legendRecallBudgetMs', secondsValue: number) {
     kid.settings[field] = Math.round(secondsValue * 1000)
-    await saveKid()
-  }
-
-  async function toggleSound() {
-    kid.settings.sound = !kid.settings.sound
     await saveKid()
   }
 
@@ -97,28 +91,15 @@
 <main class="screen">
   {#if !unlocked}
     <span class="spacer"></span>
-    <Gate onpass={() => (unlocked = true)} oncancel={home} />
+    <Gate onpass={() => (unlocked = true)} oncancel={back} />
     <span class="spacer"></span>
   {:else}
     <div class="row">
-      <button class="icon-btn" aria-label={t('back')} onclick={home}>←</button>
+      <button class="icon-btn" aria-label={t('back')} onclick={back}>←</button>
       <h1>{t('parentMenu')}</h1>
     </div>
 
     {#if message}<p class="card msg">{message}</p>{/if}
-
-    <section class="card stack">
-      <div class="row">
-        <span>{t('language')}</span>
-        <span class="spacer"></span>
-        <LangToggle />
-      </div>
-      <label class="row">
-        <span>{t('sound')}</span>
-        <span class="spacer"></span>
-        <input type="checkbox" checked={kid.settings.sound} onchange={toggleSound} />
-      </label>
-    </section>
 
     <section class="card stack">
       <label class="stack">
@@ -235,11 +216,6 @@
   }
   input[type='range'] {
     width: 100%;
-    accent-color: var(--accent);
-  }
-  input[type='checkbox'] {
-    width: 24px;
-    height: 24px;
     accent-color: var(--accent);
   }
 </style>

@@ -177,6 +177,12 @@ export const lt: Dict = {
   },
   nextMax: 'Deimantas — geriausias medalis! 💎',
 
+  settingsTitle: 'Nustatymai',
+  adventure: 'Nuotykis',
+  soundOn: 'Įjungtas',
+  soundOff: 'Išjungtas',
+  parentLink: 'Nustatymai tėvams',
+
   gateTitle: 'Suaugusiesiems',
   gateAsk: 'Išspręsk ir tęsk:',
   parentMenu: 'Tėvų meniu',
