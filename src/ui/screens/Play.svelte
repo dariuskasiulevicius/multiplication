@@ -2,7 +2,7 @@
   import { onDestroy, onMount } from 'svelte'
   import { sfx, vibrate } from '../../audio/sfx'
   import { today } from '../../core/dates'
-  import { worldOf } from '../../core/journey'
+  import { LEGEND_DAYS, worldOf } from '../../core/journey'
   import {
     completeRound,
     ensureDay,
@@ -29,12 +29,12 @@
   import { app, saveKid, syncNow } from '../../data/store.svelte'
   import { i18n, seconds, t, type Key } from '../../i18n/index.svelte'
   import type { Theme } from '../../themes'
-  import BadgeReveal from '../components/BadgeReveal.svelte'
   import Confetti from '../components/Confetti.svelte'
   import DotGrid from '../components/DotGrid.svelte'
   import MysteryChest from '../components/MysteryChest.svelte'
   import Numpad from '../components/Numpad.svelte'
   import SpeedBar from '../components/SpeedBar.svelte'
+  import WorldCelebration from '../components/WorldCelebration.svelte'
   import { starText } from '../stars'
 
   let { kid, theme }: { kid: KidState; theme: Theme } = $props()
@@ -484,7 +484,7 @@
         {@const e = result.earned}
         <div class="card stack day">
           <h2>{theme.avatar} {t('dayDone', { n: e.playDay })}</h2>
-          <p>{t('streakNow', { n: kid.journey.streak })}</p>
+          {#if e.playDay <= LEGEND_DAYS}<p>{t('streakNow', { n: kid.journey.streak })}</p>{/if}
           {#if e.shieldsUsed.length}<p>🛡️ {t('shieldUsed', { n: e.shieldsUsed.length })}</p>{/if}
           {#if e.worldCompleted}
             <p class="world">🏁 {t('worldDone', { world: worldName(e.worldCompleted) })}</p>
@@ -520,11 +520,10 @@
 
 {#if toast}<div class="toast pop">{toast}</div>{/if}
 {#if revealing && result?.earned?.worldCompleted}
-  {@const w = result.earned.worldCompleted}
-  <BadgeReveal
-    badge={theme.badges[w - 1]}
-    world={worldName(w)}
-    nextWorld={w < 10 ? worldName(worldOf(result.earned.playDay + 1)) : null}
+  <WorldCelebration
+    {kid}
+    {theme}
+    world={result.earned.worldCompleted}
     shield={result.earned.shieldEarned}
     onclose={() => (revealing = false)}
   />

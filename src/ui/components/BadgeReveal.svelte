@@ -9,8 +9,17 @@
     world,
     nextWorld,
     shield,
+    square = null,
     onclose,
-  }: { badge: Badge; world: string; nextWorld: string | null; shield: boolean; onclose: () => void } = $props()
+  }: {
+    badge: Badge
+    world: string
+    nextWorld: string | null
+    shield: boolean
+    /** Legend Worlds grow the Journey Grid's square to this size. */
+    square?: number | null
+    onclose: () => void
+  } = $props()
 
   let opened = $state(false)
   let fire = $state(0)
@@ -43,6 +52,7 @@
         <p><b>{t('youEarned')}</b></p>
         <ul>
           <li>{badge.emoji} {t('badgeItem', { badge: badge.name[i18n.lang] })}</li>
+          {#if square}<li>🗺️ {t('squareGrown', { n: square, sq: square * square })}</li>{/if}
           {#if shield}<li>🛡️ {t('shieldItem')}</li>{/if}
           {#if nextWorld}<li>🔓 {t('worldUnlocked', { world: nextWorld })}</li>{/if}
         </ul>

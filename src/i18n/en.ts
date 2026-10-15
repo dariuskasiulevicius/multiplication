@@ -134,6 +134,32 @@ export const en = {
   shieldItem: 'A Shield for your streak',
   worldUnlocked: 'New world: {world}',
   awesome: 'Awesome!',
+  squareGrown: 'Your grid is now {n} × {n} = {sq} days!',
+
+  // Ceremonies
+  challengeDone: 'You finished the Challenge!',
+  legendDone: 'You are a Legend!',
+  statDays: {
+    one: '{n} Play Day',
+    other: '{n} Play Days',
+  },
+  statGold: '🥇 {n} of 100 facts mastered',
+  statDiamond: {
+    one: '💎 {n} diamond',
+    other: '💎 {n} diamonds',
+  },
+  statTrials: {
+    one: '🏆 {n} Speed Trial star',
+    other: '🏆 {n} Speed Trial stars',
+  },
+  statFire: '🔥 Fire: {n}',
+  legendNext: 'Next: Legend 👑',
+  legendRule1: '3 short rounds a day',
+  legendRule2: 'A faster speed goal — go for 💎 Diamonds!',
+  legendRule3: 'Grow your grid to 10 × 10 = 100 days',
+  legendGo: "I'm ready!",
+  freeNext: 'From now on: free play. Practise whenever you like — no fire to keep burning.',
+  legendBye: 'Hooray!',
 
   // Speed Trial
   trialIntro: '20 questions. Answer fast to win stars!',

@@ -163,4 +163,6 @@ export interface KidState {
   look: Partial<Record<CosmeticSlot, string>>
   /** Best Speed Trial per World number. */
   trials: Record<number, TrialResult>
+  /** Highest World whose World Badge reveal (and ceremony) the Kid has seen. */
+  revealedWorld: number
 }
