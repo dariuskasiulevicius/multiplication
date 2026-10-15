@@ -70,6 +70,7 @@ export function createKid(o: NewKid): KidState {
     owned: [],
     look: {},
     trials: {},
+    revealedWorld: 0,
   }
 }
 
@@ -88,6 +89,7 @@ export function migrateKid(kid: KidState): KidState {
   kid.owned ??= []
   kid.look ??= {}
   kid.trials ??= {}
+  kid.revealedWorld ??= lastCompletedWorld(kid) ?? 0
   const day = Math.max(1, kid.journey.playDays.length)
   for (const f of Object.values(kid.facts)) if (f.introduced) f.introducedDay ??= day
   return kid
@@ -300,6 +302,43 @@ export function completeRound(kid: KidState, r: RoundDone, rng: Rng = Math.rando
   }
   cutBatch(kid, r.date)
   return { earned, chest, newBest, capReached: day.playMs >= DAILY_CAP_MS }
+}
+
+// ── Celebrations ─────────────────────────────────────────
+
+/** Completed World whose badge reveal the Kid has not seen yet (e.g. the app closed first). */
+export function pendingReveal(kid: KidState): number | null {
+  const w = lastCompletedWorld(kid)
+  return w !== null && w > kid.revealedWorld ? w : null
+}
+
+export function markRevealed(kid: KidState, world: number): void {
+  kid.revealedWorld = Math.max(kid.revealedWorld, world)
+}
+
+/** The big ceremony after a World's badge: finishing the Challenge (World 7) or Legend (World 10). */
+export function ceremonyFor(world: number): 'challenge' | 'legend' | null {
+  return world === 7 ? 'challenge' : world === 10 ? 'legend' : null
+}
+
+export interface JourneyStats {
+  playDays: number
+  /** Mastered Facts: Gold or Diamond. */
+  gold: number
+  diamond: number
+  trialStars: number
+  streak: number
+}
+
+export function journeyStats(kid: KidState): JourneyStats {
+  const tiers = countTiers(kid.facts)
+  return {
+    playDays: kid.journey.playDays.length,
+    gold: tiers.gold + tiers.diamond,
+    diamond: tiers.diamond,
+    trialStars: Object.values(kid.trials).reduce((s, r) => s + r.stars, 0),
+    streak: kid.journey.streak,
+  }
 }
 
 // ── Speed Trials ─────────────────────────────────────────

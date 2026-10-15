@@ -116,7 +116,7 @@ _Avoid_: Chapter, level, week
 One of the three Worlds of Legend, each a ring that grows the Journey Grid's square: to 8 × 8 (Play Day 64, 15 Play Days), 9 × 9 (Play Day 81, 17 Play Days) and 10 × 10 (Play Day 100, 19 Play Days).
 
 **World Badge**:
-A themed collectible earned by completing a World; until then its goal cell on the Journey Grid shows it as a Mystery Badge, and reaching the goal reveals it with a celebration.
+A themed collectible earned by completing a World; until then its goal cell on the Journey Grid shows it as a Mystery Badge (a purple "?" coin), and reaching the goal reveals it with a celebration — shown again on the next visit if the Kid missed it.
 _Avoid_: Trophy, achievement, medal
 
 **Speed Trial**:
@@ -124,11 +124,11 @@ A 20-question test that is the last Core Round of a World's final Play Day — a
 _Avoid_: Boss, exam, test
 
 **Legend**:
-The phase from Play Day 50 to Play Day 100, with fewer Core Rounds, speed judged by Legend Recall Budget, played through three Legend Worlds.
+The phase from Play Day 50 to Play Day 100, with fewer Core Rounds, speed judged by Legend Recall Budget, played through three Legend Worlds. It is opened by the Challenge ceremony after Play Day 49 and closed by the Legend ceremony after Play Day 100.
 _Avoid_: Expert mode, extension
 
 **Free Play**:
-Practice after Play Day 100, with no Streak pressure.
+Practice after Play Day 100, with no Streak pressure: the fire and Shields are no longer shown, while Play Days and Mystery Chests continue.
 
 **Streak**:
 The number of consecutive calendar days that were either Play Days or covered by a Shield.

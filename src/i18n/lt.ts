@@ -137,6 +137,27 @@ export const lt: Dict = {
   shieldItem: 'Skydas tavo serijai',
   worldUnlocked: 'Naujas pasaulis: {world}',
   awesome: 'Šaunu!',
+  squareGrown: 'Tavo lentelė dabar {n} × {n} = {sq} dienų!',
+
+  // Ceremonies
+  challengeDone: 'Įveikei iššūkį!',
+  legendDone: 'Tu — Legenda!',
+  statDays: {
+    one: '{n} žaidimo diena',
+    few: '{n} žaidimo dienos',
+    other: '{n} žaidimo dienų',
+  },
+  statGold: '🥇 Išmokta {n} iš 100 pavyzdžių',
+  statDiamond: '💎 Deimantų: {n}',
+  statTrials: '🏆 Greičio išbandymų žvaigždučių: {n}',
+  statFire: '🔥 Ugnis: {n}',
+  legendNext: 'Toliau: Legenda 👑',
+  legendRule1: '3 trumpi raundai per dieną',
+  legendRule2: 'Greitesnis tikslas — siek 💎 deimantų!',
+  legendRule3: 'Išaugink lentelę iki 10 × 10 = 100 dienų',
+  legendGo: 'Pradedam!',
+  freeNext: 'Nuo šiol — laisvas žaidimas. Treniruokis kada nori — ugnies saugoti nebereikia.',
+  legendBye: 'Valio!',
 
   // Speed Trial
   trialIntro: '20 klausimų. Atsakyk greitai ir laimėk žvaigždučių!',

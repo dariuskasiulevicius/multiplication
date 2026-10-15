@@ -1,15 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import { lessonFacts, LESSONS } from './facts'
 import {
+  ceremonyFor,
   completeRound,
   createKid,
   DAILY_CAP_MS,
   finishPlacement,
   finishTrial,
   introduceLesson,
+  journeyStats,
   lastCompletedWorld,
+  markRevealed,
   migrateKid,
   nextRound,
+  pendingReveal,
   playDayNumber,
   recordAnswer,
   targetsFor,
@@ -223,5 +227,35 @@ describe('migrateKid', () => {
     k.settings.recallBudgetMs = 4000
     k.settings.legendRecallBudgetMs = 2500
     expect(migrateKid(k).settings).toMatchObject({ recallBudgetMs: 4000, legendRecallBudgetMs: 2500 })
+  })
+})
+
+describe('celebrations', () => {
+  it('a World Badge reveal stays pending until seen', () => {
+    const k = playedDays(6)
+    expect(pendingReveal(k)).toBeNull()
+    for (const kind of ['review', 'new', 'mixed', 'trial'] as const) round(k, kind)
+    expect(pendingReveal(k)).toBe(1)
+    markRevealed(k, 1)
+    expect(pendingReveal(k)).toBeNull()
+  })
+
+  it('progress from before reveals were tracked does not replay old ones', () => {
+    const k = playedDays(15)
+    delete (k as Partial<KidState>).revealedWorld
+    expect(migrateKid(k).revealedWorld).toBe(2)
+    expect(pendingReveal(k)).toBeNull()
+  })
+
+  it('finishing the Challenge and Legend get a ceremony', () => {
+    expect([1, 6, 7, 8, 9, 10].map(ceremonyFor)).toEqual([null, null, 'challenge', null, null, 'legend'])
+  })
+
+  it('sums up the journey for the ceremony', () => {
+    const k = playedDays(49)
+    k.facts['2x3'].tier = 'gold'
+    k.facts['3x2'].tier = 'diamond'
+    k.trials = { 1: { stars: 3, fast: 20, total: 20, tries: 1 }, 2: { stars: 2, fast: 16, total: 20, tries: 1 } }
+    expect(journeyStats(k)).toMatchObject({ playDays: 49, gold: 2, diamond: 1, trialStars: 5 })
   })
 })

@@ -3,7 +3,7 @@
 A browser game that teaches kids the whole 1–10 multiplication table **to speed**, in 5–9 minutes a day.
 
 - **The Challenge** is 49 Play Days (7 × 7): seven Worlds of seven days, drawn as a 7 × 7 square on the Journey Grid.
-- **Legend** keeps going to Play Day 100 (10 × 10) with shorter sessions and a stricter speed goal.
+- **Legend** keeps going to Play Day 100 (10 × 10) with shorter sessions and a stricter speed goal. Day 49 and day 100 end with a big ceremony; after day 100 it is free play with no streak to keep.
 - Every day: a warm-up, about five short Rounds (review, new facts, mix, speed, tricky ones), then "see you tomorrow".
 - Speed is judged against each kid's own typing speed plus a Recall Budget, so a 7-year-old and an 11-year-old are both challenged fairly.
 - Facts level up on a 10 × 10 Sticker Board: bronze → silver → gold (mastered) → diamond.

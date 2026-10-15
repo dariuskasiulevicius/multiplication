@@ -2,7 +2,7 @@
   import { onMount } from 'svelte'
   import { today } from '../../core/dates'
   import { CHALLENGE_DAYS, LEGEND_DAYS, viewStreak, worldOf } from '../../core/journey'
-  import { nextRound, phaseFor, playDayNumber, trialRetry } from '../../core/kid'
+  import { nextRound, pendingReveal, phaseFor, playDayNumber, trialRetry } from '../../core/kid'
   import type { KidState } from '../../core/types'
   import { applyUpdate } from '../../data/pwa'
   import { app, saveKid, syncNow } from '../../data/store.svelte'
@@ -13,6 +13,7 @@
   import HelpSheet from '../components/HelpSheet.svelte'
   import JourneyGrid from '../components/JourneyGrid.svelte'
   import StickerBoard from '../components/StickerBoard.svelte'
+  import WorldCelebration from '../components/WorldCelebration.svelte'
   import { starText } from '../stars'
 
   let { kid, theme }: { kid: KidState; theme: Theme } = $props()
@@ -21,10 +22,13 @@
   let tab = $state<'journey' | 'stickers'>('journey')
   let helping = $state(false)
   let tip = $state<'fire' | 'shield' | null>(null)
+  /** A World Badge reveal the Kid missed (the app closed before it was seen). */
+  let missed = $state<number | null>(null)
 
   // The "How to play" sheet opens by itself the first time.
   onMount(() => {
     if (!kid.helpSeen) helping = true
+    else missed = pendingReveal(kid)
   })
 
   // New versions install here, between Rounds, never mid-game.
@@ -58,6 +62,7 @@
       kid.helpSeen = true
       await saveKid()
     }
+    missed = pendingReveal(kid)
   }
 
   async function moveHere() {
@@ -79,12 +84,15 @@
     </button>
     <span class="spacer"></span>
     <button class="pill" aria-label="{t('stars')}: {kid.stars}" onclick={() => (app.screen = 'shop')}>⭐ {kid.stars}</button>
-    <button class="pill" class:on={tip === 'fire'} aria-label={t('streak')} onclick={() => (tip = tip === 'fire' ? null : 'fire')}>
-      🔥 {streak.streak}
-    </button>
-    <button class="pill" class:on={tip === 'shield'} aria-label={t('shields')} onclick={() => (tip = tip === 'shield' ? null : 'shield')}>
-      🛡️ {kid.journey.shields}
-    </button>
+    <!-- Free Play has no Streak pressure: no fire or Shields. -->
+    {#if phase !== 'free'}
+      <button class="pill" class:on={tip === 'fire'} aria-label={t('streak')} onclick={() => (tip = tip === 'fire' ? null : 'fire')}>
+        🔥 {streak.streak}
+      </button>
+      <button class="pill" class:on={tip === 'shield'} aria-label={t('shields')} onclick={() => (tip = tip === 'shield' ? null : 'shield')}>
+        🛡️ {kid.journey.shields}
+      </button>
+    {/if}
     <button class="icon-btn" aria-label={t('settingsTitle')} onclick={() => (app.screen = 'settings')}>⚙️</button>
   </header>
 
@@ -122,7 +130,9 @@
     </div>
   </section>
 
-  {#if !streak.playedToday && streak.shieldsNeeded > 0}
+  {#if phase === 'free'}
+    <!-- nothing to keep burning -->
+  {:else if !streak.playedToday && streak.shieldsNeeded > 0}
     <p class="note">🛡️ {t('shieldsWillCover', { n: streak.shieldsNeeded })}</p>
   {:else if streak.broken}
     <p class="note">🌱 {t('streakBroken')}</p>
@@ -151,6 +161,8 @@
 
 {#if helping}
   <HelpSheet onclose={closeHelp} />
+{:else if missed}
+  <WorldCelebration {kid} {theme} world={missed} shield={false} onclose={() => (missed = null)} />
 {/if}
 
 
