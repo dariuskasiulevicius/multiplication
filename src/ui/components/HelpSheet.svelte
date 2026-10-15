@@ -1,5 +1,6 @@
 <script lang="ts">
   import { t } from '../../i18n/index.svelte'
+  import MysteryBadgeIcon from './MysteryBadgeIcon.svelte'
 
   let { onclose }: { onclose: () => void } = $props()
 </script>
@@ -25,7 +26,7 @@
       </ul>
       <p>{t('helpDusty')}</p>
     </section>
-    <section class="card">{t('helpBadges')}</section>
+    <section class="card"><MysteryBadgeIcon /> {t('helpBadges')}</section>
     <section class="card">{t('helpWorlds')}</section>
     <section class="card">{t('helpTrial')}</section>
     <section class="card">{t('helpStars')}</section>
