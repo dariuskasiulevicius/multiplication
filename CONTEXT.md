@@ -120,7 +120,7 @@ A themed collectible earned by completing a World; until then its goal cell on t
 _Avoid_: Trophy, achievement, medal
 
 **Speed Trial**:
-A 20-question test at the end of a World — about half Facts Introduced in that World, the rest the Kid's Weak Facts — scored 1–3 Stars (50 / 75 / 90 % Fast Answers); it can be retried in Bonus time, only the best attempt counts, and it never blocks progress.
+A 20-question test that is the last Core Round of a World's final Play Day — about half Facts Introduced in that World, the rest the Kid's Weak Facts — scored 0–3 Stars (50 / 75 / 90 % Fast Answers); a missed question is not asked again. It can be retried in Bonus time until it has 3 Stars, only the best attempt counts, and it never blocks progress.
 _Avoid_: Boss, exam, test
 
 **Legend**:
@@ -140,14 +140,18 @@ _Avoid_: Freeze, life
 ### Rewards and look
 
 **Star**:
-The currency earned in Speed Trials and Mystery Chests and spent on Cosmetics.
+The currency earned in Speed Trials and Mystery Chests and spent on Cosmetics; a Speed Trial retry earns only the Stars above its best attempt.
 _Avoid_: Coin, point
 
 **Cosmetic**:
-A purely visual avatar item with no effect on play.
+A purely visual avatar item — a hat, a buddy or a sparkle — bought in the Shop with no effect on play; Cosmetics work with every Theme.
+
+**Shop**:
+Where a Kid tries on, buys and wears Cosmetics; opened by tapping the avatar.
+_Avoid_: Store, wardrobe
 
 **Mystery Chest**:
-A random reward (Stars or a Cosmetic) given when a Play Day is earned.
+A random reward given when a Play Day is earned: usually 1–3 Stars, sometimes a cheap Cosmetic; it is added when the Play Day is earned, and opening it only shows it.
 
 **Theme**:
 A visual skin — Space, Pirates, Unicorn or Pets — that names and draws Worlds, World Badges and the avatar but never changes rules; a Kid may switch Theme at any time without losing progress.
@@ -185,7 +189,7 @@ The settings area on a Kid's device, behind an adult gate.
 - A **Session** starts with one **Warm-up** and contains zero or more **Rounds**
 - A **Play Day** is earned once per calendar day, when **Core Rounds** are finished; Core Rounds left unfinished at midnight are lost, but their answers still count toward **Facts**
 - Each **Session** starts with its own **Warm-up**, even when continuing the same day's **Core Rounds**
-- A **World** ends with one **Speed Trial**; completing it reveals its **World Badge** and earns one **Shield** (if fewer than 2 are held)
+- A **World** ends with one **Speed Trial**, the last Core Round of its final **Play Day**; earning that Play Day reveals its **World Badge** and earns one **Shield** (if fewer than 2 are held), even if the **Daily Cap** came first
 - The **Challenge** has 7 **Worlds** of 7 **Play Days** (the 7 × 7 square), then **Legend** with 3 **Legend Worlds** (rings to 8 × 8, 9 × 9, 10 × 10), then **Free Play**
 - The **Journey Grid** (Play Days) and the **Sticker Board** (Facts) are both 10 × 10; the finish line is both full
 - **Target Time** = **Baseline** + **Recall Budget**; a **Fast Answer** beats it

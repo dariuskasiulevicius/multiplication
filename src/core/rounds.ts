@@ -4,6 +4,7 @@ import { shuffle, type Rng } from './rng'
 import type { FactId, FactState, ISODate, RoundKind } from './types'
 
 export const ROUND_SIZE = 10
+export const TRIAL_SIZE = 20
 /** Recent misses above this skip new Facts for a day of consolidation. */
 const CONSOLIDATE_AT = 6
 
@@ -25,6 +26,8 @@ export interface BuildContext {
   /** Last few Play Days plus today, for "recent miss" checks. */
   recentDays: ISODate[]
   rng: Rng
+  /** Facts Introduced in the World of a Speed Trial. */
+  worldFacts?: FactId[]
 }
 
 const typed = (id: FactId): RoundItem => {
@@ -103,6 +106,11 @@ export function buildRound(kind: RoundKind, ctx: BuildContext): BuiltRound {
       const picked = fill(ROUND_SIZE, weak.slice(0, 4), shuffle(due, ctx.rng).slice(0, 3), random, weak)
       return round(kind, picked, ctx)
     }
+    case 'trial': {
+      // About half from the World's own Facts, the rest the Kid's Weak Facts.
+      const own = shuffle(ctx.worldFacts ?? [], ctx.rng).slice(0, TRIAL_SIZE / 2)
+      return round(kind, fill(TRIAL_SIZE, own, weak, random), ctx)
+    }
     case 'placement':
       throw new Error('Placement Quiz is driven by placement.ts')
   }
@@ -166,9 +174,12 @@ export class RoundRunner {
   correct = 0
   fast = 0
   private retried = new Set<FactId>()
+  private requeue: boolean
 
-  constructor(items: RoundItem[]) {
+  /** Without `requeue` (Speed Trials) every question is asked once, so the score is out of the round size. */
+  constructor(items: RoundItem[], requeue = true) {
     this.items = [...items]
+    this.requeue = requeue
   }
 
   get current(): RoundItem | undefined {
@@ -198,7 +209,7 @@ export class RoundRunner {
     this.bestCombo = Math.max(this.bestCombo, this.combo)
 
     const id = factId(item.a, item.b)
-    if (!result.correct && !this.retried.has(id)) {
+    if (this.requeue && !result.correct && !this.retried.has(id)) {
       this.retried.add(id)
       const at = Math.min(this.items.length, this.pos + 3)
       this.items.splice(at, 0, { type: 'typed', a: item.a, b: item.b, retry: true })

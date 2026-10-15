@@ -2,23 +2,23 @@
   import { onMount } from 'svelte'
   import { today } from '../../core/dates'
   import { CHALLENGE_DAYS, LEGEND_DAYS, viewStreak, worldOf } from '../../core/journey'
-  import { nextRound, phaseFor, playDayNumber } from '../../core/kid'
-  import type { KidState, ThemeId } from '../../core/types'
+  import { nextRound, phaseFor, playDayNumber, trialRetry } from '../../core/kid'
+  import type { KidState } from '../../core/types'
   import { applyUpdate } from '../../data/pwa'
   import { app, saveKid, syncNow } from '../../data/store.svelte'
   import { fetchSnapshot, fromSnapshot } from '../../data/sync'
   import { i18n, t } from '../../i18n/index.svelte'
   import type { Theme } from '../../themes'
+  import Avatar from '../components/Avatar.svelte'
   import HelpSheet from '../components/HelpSheet.svelte'
   import JourneyGrid from '../components/JourneyGrid.svelte'
   import StickerBoard from '../components/StickerBoard.svelte'
-  import ThemePicker from '../components/ThemePicker.svelte'
+  import { starText } from '../stars'
 
   let { kid, theme }: { kid: KidState; theme: Theme } = $props()
 
   const date = today()
   let tab = $state<'journey' | 'stickers'>('journey')
-  let picking = $state(false)
   let helping = $state(false)
   let tip = $state<'fire' | 'shield' | null>(null)
 
@@ -37,13 +37,20 @@
   const phase = $derived(phaseFor(kid, date))
   const world = $derived(worldOf(Math.min(dayNo, LEGEND_DAYS)) ?? 10)
   const next = $derived(nextRound(kid, date))
+  const retry = $derived(trialRetry(kid, date))
 
   const playLabel = $derived.by(() => {
     if (!next) return t('doneToday')
-    if (!next.core) return `⭐ ${t('playBonus')}`
+    if (!next.core) return `🎯 ${t('playBonus')}`
+    if (next.kind === 'trial') return `🏆 ${t('round_trial')} (${next.index}/${next.total})`
     if (next.index === 1) return `▶ ${t('playStart')}`
     return `▶ ${t('playContinue', { done: next.index - 1, total: next.total })}`
   })
+
+  function play(trial: number | null) {
+    app.trialRetry = trial
+    app.screen = 'play'
+  }
 
   async function closeHelp() {
     helping = false
@@ -51,12 +58,6 @@
       kid.helpSeen = true
       await saveKid()
     }
-  }
-
-  async function changeTheme(id: ThemeId) {
-    kid.settings.theme = id
-    picking = false
-    await saveKid()
   }
 
   async function moveHere() {
@@ -72,11 +73,12 @@
 
 <main class="screen">
   <header class="row">
-    <button class="me" onclick={() => (picking = true)} aria-label={t('changeTheme')}>
-      <span class="avatar">{theme.avatar}</span>
+    <button class="me" onclick={() => (app.screen = 'shop')} aria-label={t('shopTitle')}>
+      <Avatar base={theme.avatar} look={kid.look} size={2} />
       <b>{kid.name}</b>
     </button>
     <span class="spacer"></span>
+    <button class="pill" aria-label="{t('stars')}: {kid.stars}" onclick={() => (app.screen = 'shop')}>⭐ {kid.stars}</button>
     <button class="pill" class:on={tip === 'fire'} aria-label={t('streak')} onclick={() => (tip = tip === 'fire' ? null : 'fire')}>
       🔥 {streak.streak}
     </button>
@@ -126,13 +128,16 @@
     <p class="note">🌱 {t('streakBroken')}</p>
   {/if}
 
-  <button class="btn big play" disabled={!next || kid.inactive} onclick={() => (app.screen = 'play')}>
+  <button class="btn big play" disabled={!next || kid.inactive} onclick={() => play(null)}>
     {playLabel}
   </button>
+  {#if retry && !kid.inactive}
+    <button class="btn ghost" onclick={() => play(retry)}>🏆 {t('trialAgain')} · {starText(kid.trials[retry]?.stars ?? 0)}</button>
+  {/if}
 
   <div class="tabs">
     <button class:on={tab === 'journey'} onclick={() => (tab = 'journey')}>🗺️ {t('journey')}</button>
-    <button class:on={tab === 'stickers'} onclick={() => (tab = 'stickers')}>⭐ {t('stickers')}</button>
+    <button class:on={tab === 'stickers'} onclick={() => (tab = 'stickers')}>🏅 {t('stickers')}</button>
   </div>
 
   <section class="card">
@@ -148,18 +153,6 @@
   <HelpSheet onclose={closeHelp} />
 {/if}
 
-{#if picking}
-  <div class="sheet" role="dialog" aria-modal="true">
-    <div class="screen">
-      <div class="row">
-        <h2>{t('changeTheme')}</h2>
-        <span class="spacer"></span>
-        <button class="icon-btn" aria-label={t('close')} onclick={() => (picking = false)}>✕</button>
-      </div>
-      <ThemePicker selected={kid.settings.theme} onpick={changeTheme} />
-    </div>
-  </div>
-{/if}
 
 <style>
   header {
@@ -222,9 +215,6 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .avatar {
-    font-size: 2rem;
-  }
   .world {
     display: flex;
     align-items: center;
@@ -254,13 +244,5 @@
   }
   .tabs button.on {
     background: rgba(255, 255, 255, 0.22);
-  }
-  .sheet {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(4px);
-    z-index: 20;
-    overflow: auto;
   }
 </style>

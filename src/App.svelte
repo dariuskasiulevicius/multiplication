@@ -11,6 +11,7 @@
   import ParentSetup from './ui/screens/ParentSetup.svelte'
   import Play from './ui/screens/Play.svelte'
   import Settings from './ui/screens/Settings.svelte'
+  import Shop from './ui/screens/Shop.svelte'
   import Welcome from './ui/screens/Welcome.svelte'
 
   const theme = $derived(THEMES[app.kid?.settings.theme ?? 'space'])
@@ -79,6 +80,8 @@
     <Home kid={app.kid} {theme} />
   {:else if app.screen === 'play' && app.kid}
     <Play kid={app.kid} {theme} />
+  {:else if app.screen === 'shop' && app.kid}
+    <Shop kid={app.kid} {theme} />
   {:else if app.screen === 'settings' && app.kid}
     <Settings kid={app.kid} />
   {:else if app.screen === 'parent' && app.kid}

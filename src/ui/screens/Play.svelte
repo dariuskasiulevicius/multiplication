@@ -7,14 +7,19 @@
     completeRound,
     ensureDay,
     finishPlacement,
+    finishTrial,
     introduceLesson,
     nextRound,
     recentDays,
     recordAnswer,
     recordTap,
     targetsFor,
+    trialRetry,
+    trialWorldFor,
+    worldFacts,
     type NextRound,
     type RoundResult,
+    type TrialOutcome,
   } from '../../core/kid'
   import { tierRank } from '../../core/mastery'
   import { Placement } from '../../core/placement'
@@ -27,8 +32,10 @@
   import BadgeReveal from '../components/BadgeReveal.svelte'
   import Confetti from '../components/Confetti.svelte'
   import DotGrid from '../components/DotGrid.svelte'
+  import MysteryChest from '../components/MysteryChest.svelte'
   import Numpad from '../components/Numpad.svelte'
   import SpeedBar from '../components/SpeedBar.svelte'
+  import { starText } from '../stars'
 
   let { kid, theme }: { kid: KidState; theme: Theme } = $props()
 
@@ -66,6 +73,12 @@
   let chosen = $state<number | null>(null)
   let combo = $state(0)
   let toast = $state<string | null>(null)
+  /** World of the Speed Trial being played, if this Round is one. */
+  let trialWorld = $state<number | null>(null)
+  let trialOutcome = $state<TrialOutcome | null>(null)
+  /** Speed Trial retry asked for from Home: played right after the Warm-up. */
+  let retryFirst = app.trialRetry
+  app.trialRetry = null
 
   // Timing (not reactive)
   let shownAt = 0
@@ -84,6 +97,7 @@
   /** A World was completed this round: show its World Badge reveal. */
   let revealing = $state(false)
   const after = $derived(stage === 'summary' ? nextRound(kid, date) : null)
+  const retry = $derived(stage === 'summary' ? trialRetry(kid, date) : null)
 
   onMount(() => {
     ensureDay(kid, date)
@@ -138,7 +152,8 @@
       warmIndex++
       if (warmIndex >= warmNumbers.length) {
         void saveKid()
-        startRound()
+        startRound(retryFirst)
+        retryFirst = null
         return
       }
     } else {
@@ -150,14 +165,18 @@
 
   // ── Rounds ────────────────────────────────────────────
 
-  function startRound() {
+  /** Start the next Round, or with `retry` that World's Speed Trial again (Bonus time only). */
+  function startRound(retry: number | null = null) {
     ensureDay(kid, date)
     const next = nextRound(kid, date)
     if (!next) {
       app.screen = 'home'
       return
     }
-    round = next
+    if (retry !== null && next.kind !== 'bonus') retry = null
+    round = retry !== null ? { ...next, kind: 'trial' } : next
+    trialWorld = retry ?? (next.kind === 'trial' ? trialWorldFor(kid, date) : null)
+    trialOutcome = null
     combo = 0
     stats = { correct: 0, total: 0, fast: 0, timeMs: 0 }
     activeMs = 0
@@ -169,15 +188,16 @@
       kind = 'placement'
     } else {
       placement = null
-      const built = buildRound(next.kind, {
+      const built = buildRound(round.kind, {
         facts: kid.facts,
         date,
         recentDays: recentDays(kid, date),
         rng: Math.random,
+        worldFacts: trialWorld !== null ? worldFacts(kid, trialWorld) : undefined,
       })
       kind = built.kind
       if (built.lesson) introduceLesson(kid, built.lesson, date)
-      runner = new RoundRunner(built.items)
+      runner = new RoundRunner(built.items, built.kind !== 'trial')
     }
     stage = 'roundStart'
   }
@@ -315,6 +335,7 @@
       }
     } else if (runner) {
       stats = { correct: runner.correct, total: runner.answered, fast: runner.fast, timeMs: answerMs }
+      if (trialWorld !== null) trialOutcome = finishTrial(kid, trialWorld, runner.fast, runner.answered)
     }
     result = completeRound(kid, { kind, core: r.core, playMs: activeMs, roundMs: Math.round(answerMs), date })
     stage = 'summary'
@@ -365,9 +386,19 @@
     <Numpad onDigit={digit} onBack={back} />
   {:else if stage === 'roundStart'}
     <section class="stage center stack pop">
-      <div class="emoji">{kind === 'speed' ? '⚡' : kind === 'new' ? '✨' : kind === 'placement' ? '🧭' : theme.avatar}</div>
+      <div class="emoji">
+        {kind === 'speed' ? '⚡' : kind === 'new' ? '✨' : kind === 'placement' ? '🧭' : kind === 'trial' ? '🏆' : theme.avatar}
+      </div>
       <h1>{roundTitle}</h1>
+      {#if trialWorld !== null}<p class="world">{worldName(trialWorld)}</p>{/if}
       {#if round?.core}<p class="muted">{t('roundOf', { n: round.index, total: round.total })}</p>{/if}
+      {#if kind === 'trial'}
+        <p>{t('trialIntro')}</p>
+        <p class="muted small">{t('trialRules')}</p>
+        {#if trialWorld !== null && kid.trials[trialWorld]}
+          <p>{t('trialBest', { stars: starText(kid.trials[trialWorld].stars) })}</p>
+        {/if}
+      {/if}
       {#if kind === 'speed' && kid.bestSpeedRoundMs}<p>🏆 {t('bestTime', { time: seconds(kid.bestSpeedRoundMs) })}</p>{/if}
       {#if kind === 'placement'}<p>{t('placementIntro')}</p>{/if}
       <button class="btn big" onclick={go}>{t('letsGo')}</button>
@@ -424,6 +455,19 @@
       {#if kind === 'placement'}
         <div class="emoji">🧭</div>
         <h1>{placementKnown > 0 ? t('placementDone', { n: placementKnown }) : t('placementZero')}</h1>
+      {:else if kind === 'trial' && trialOutcome}
+        {@const o = trialOutcome}
+        <div class="emoji">🏆</div>
+        <h1>{t('round_trial')}</h1>
+        <p class="stars-big" aria-label="{o.stars} / 3">{starText(o.stars)}</p>
+        <p>{t('trialFast', { fast: stats.fast, total: stats.total, pct: Math.round((stats.fast / Math.max(1, stats.total)) * 100) })}</p>
+        {#if o.gained > 0}
+          <p class="record">⭐ {t('trialGained', { n: o.gained })}</p>
+        {:else if o.best.stars > 0}
+          <p>{t('trialBest', { stars: starText(o.best.stars) })}</p>
+        {:else}
+          <p>{t('trialNoStars')}</p>
+        {/if}
       {:else}
         <div class="emoji">🎉</div>
         <h1>{t('roundDone')}</h1>
@@ -452,13 +496,19 @@
           {/if}
           {#if e.shieldEarned}<p>{t('shieldEarned')}</p>{/if}
           {#if newGold > 0}<p>🥇 {t('newGold', { n: newGold })}</p>{/if}
+          {#if result.chest}<MysteryChest reward={result.chest} />{/if}
         </div>
       {/if}
 
       {#if after?.core}
-        <button class="btn big" onclick={startRound}>{t('nextRound')} →</button>
+        <button class="btn big" onclick={() => startRound()}>{t('nextRound')} →</button>
       {:else if after}
-        <button class="btn big" onclick={startRound}>⭐ {t('playBonus')}</button>
+        <button class="btn big" onclick={() => startRound()}>🎯 {t('playBonus')}</button>
+        {#if retry}
+          <button class="btn ghost" onclick={() => startRound(retry)}>
+            🏆 {t('trialAgain')} · {starText(kid.trials[retry]?.stars ?? 0)}
+          </button>
+        {/if}
         <button class="btn ghost" onclick={() => (app.screen = 'home')}>{t('home')}</button>
       {:else}
         {#if result.capReached}<p>{t('capReached')}</p>{/if}
@@ -601,6 +651,10 @@
   }
   .day {
     width: 100%;
+  }
+  .stars-big {
+    font-size: 2.6rem;
+    letter-spacing: 4px;
   }
   .world,
   .record {

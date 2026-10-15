@@ -11,7 +11,10 @@ export type Phase = 'challenge' | 'legend' | 'free'
 export type Lang = 'en' | 'lt'
 export type ThemeId = 'space' | 'pirates' | 'unicorn' | 'pets'
 
-export type RoundKind = 'placement' | 'review' | 'new' | 'mixed' | 'speed' | 'weak' | 'bonus'
+export type RoundKind = 'placement' | 'review' | 'new' | 'mixed' | 'speed' | 'weak' | 'bonus' | 'trial'
+
+/** Where a Cosmetic sits on the avatar. */
+export type CosmeticSlot = 'hat' | 'buddy' | 'sparkle'
 
 export interface FactState {
   a: number
@@ -34,6 +37,8 @@ export interface FactState {
   lastWrong: ISODate | null
   /** Last few correct answer times as a ratio of Target Time. */
   recent: number[]
+  /** Play Day number the Fact was Introduced on; picks a World's Facts for its Speed Trial. */
+  introducedDay?: number
 }
 
 /** Recent Warm-up taps in ms, per answer digit count. */
@@ -89,6 +94,17 @@ export interface DaySummary {
   shields: number
 }
 
+/** Best Speed Trial attempt of a World. */
+export interface TrialResult {
+  stars: number
+  fast: number
+  total: number
+  tries: number
+}
+
+/** What a Mystery Chest held; it is already added to the Kid when the chest appears. */
+export type ChestReward = { kind: 'stars'; n: number } | { kind: 'cosmetic'; id: string }
+
 export interface SyncConfig {
   url: string
   secret: string
@@ -139,4 +155,12 @@ export interface KidState {
   inactive: boolean
   /** The Kid has seen the "How to play" sheet (opened automatically once). */
   helpSeen?: boolean
+  /** Stars to spend on Cosmetics. */
+  stars: number
+  /** Cosmetic ids the Kid has. */
+  owned: string[]
+  /** Cosmetic worn in each slot. */
+  look: Partial<Record<CosmeticSlot, string>>
+  /** Best Speed Trial per World number. */
+  trials: Record<number, TrialResult>
 }
