@@ -4,6 +4,7 @@
   import { i18n, t } from '../../i18n/index.svelte'
   import type { Theme } from '../../themes'
   import { starText } from '../stars'
+  import MysteryBadgeIcon from './MysteryBadgeIcon.svelte'
 
   let { kid, theme, date }: { kid: KidState; theme: Theme; date: ISODate } = $props()
 
@@ -62,7 +63,7 @@
       {theme.worlds[w - 1].name[i18n.lang]}
       {#if kid.trials[w]}<br />🏆 {t('round_trial')}: {starText(kid.trials[w].stars)}{/if}
     {:else}
-      🎁 {t('mysteryBadge', { n: shown })}
+      <MysteryBadgeIcon /> {t('mysteryBadge', { n: shown })}
     {/if}
   </p>
 {/if}

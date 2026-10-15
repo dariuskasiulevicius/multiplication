@@ -188,10 +188,10 @@ export const lt: Dict = {
   medalGold: '🥇 Auksas — greitai 3 skirtingomis dienomis',
   medalDiamond: '💎 Deimantas — itin greitai 3 skirtingomis dienomis',
   helpDusty: '💨 Po klaidos medalis apdulka. Atsakyk greitai dar kartą ir jį nublizgink. Medalio niekada neprarasi!',
-  helpBadges: '❓ Kiekvieno pasaulio pabaigoje tavo kelionėje laukia paslaptingas ženkliukas. Pasiek jį ir sužinosi, kas viduje!',
+  helpBadges: 'Kiekvieno pasaulio pabaigoje tavo kelionėje laukia paslaptingas ženkliukas. Pasiek jį ir sužinosi, kokį ženkliuką laimėjai!',
   helpWorlds: '🗺️ 7 pasauliai × 7 dienos = 49 dienos. Paskui Legenda — iki pat 10 × 10 = 100 dienų!',
   helpTrial: '🏆 Paskutinė kiekvieno pasaulio diena baigiasi greičio išbandymu: 20 klausimų, iki ⭐⭐⭐. Nori daugiau žvaigždučių? Pabandyk dar kartą per papildomą raundą!',
-  helpStars: '🎁 Po kiekvienos žaidimo dienos atidarai paslaptingą skrynią. Žvaigždutes ⭐ išleisk parduotuvėje kepurėms ir draugams — paspausk savo paveiksliuką viršuje!',
+  helpStars: '🎁 Po kiekvienos žaidimo dienos atidarai paslaptingą skrynią: joje žvaigždutės ⭐, o kartais — staigmena tavo paveiksliukui. Žvaigždutes išleisk parduotuvėje kepurėms ir draugams — paspausk savo paveiksliuką viršuje!',
   helpClose: 'Supratau!',
   tipFire0: 'Žaisk šiandien ir įžiebk savo ugnį! 🔥',
   tipFire: {

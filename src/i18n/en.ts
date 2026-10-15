@@ -183,10 +183,10 @@ export const en = {
   medalGold: '🥇 Gold — fast on 3 different days',
   medalDiamond: '💎 Diamond — super fast on 3 different days',
   helpDusty: '💨 A mistake makes a medal dusty. Answer fast again to polish it. You never lose a medal!',
-  helpBadges: '❓ A mystery badge waits at the end of every world on your Journey. Reach it to find out what is inside!',
+  helpBadges: 'A mystery badge waits at the end of every world on your Journey. Reach it to see which badge you won!',
   helpWorlds: '🗺️ 7 worlds × 7 days = 49 days. Then Legend, all the way to 10 × 10 = 100 days!',
   helpTrial: '🏆 The last day of every world ends with a Speed Trial: 20 questions, up to ⭐⭐⭐. Want more stars? Try it again in bonus time!',
-  helpStars: '🎁 After every Play Day you open a Mystery Chest. Spend your ⭐ in the Shop on hats and buddies — tap your picture at the top!',
+  helpStars: '🎁 A Mystery Chest opens after every Play Day: it holds ⭐ stars, sometimes a surprise for your picture. Spend your ⭐ in the Shop on hats and buddies — tap your picture at the top!',
   helpClose: 'Got it!',
   tipFire0: 'Play today to light your fire! 🔥',
   tipFire: {
