@@ -2,14 +2,17 @@
 // proxy in the app, a plain object in tests) and return what happened.
 
 import { addTap, baseline, emptyCalibration, median } from './calibration'
+import { openChest } from './cosmetics'
 import { digits, factId, inFamily, initialFacts, lessonFacts, type Lesson } from './facts'
-import { earnPlayDay, newJourney, phaseOf, type EarnEvents } from './journey'
+import { earnPlayDay, isWorldEnd, newJourney, phaseOf, worldOf, worldRange, type EarnEvents } from './journey'
 import { applyAnswer, countTiers, introduce, type AnswerOutcome } from './mastery'
-import { uid } from './rng'
+import { uid, type Rng } from './rng'
 import type {
   AnswerRow,
   Batch,
+  ChestReward,
   DayProgress,
+  FactId,
   DaySummary,
   ISODate,
   KidState,
@@ -18,6 +21,7 @@ import type {
   RoundKind,
   SyncConfig,
   ThemeId,
+  TrialResult,
 } from './types'
 
 export const DAILY_CAP_MS = 9 * 60_000
@@ -62,18 +66,30 @@ export function createKid(o: NewKid): KidState {
     pending: [],
     lastSyncAt: null,
     inactive: false,
+    stars: 0,
+    owned: [],
+    look: {},
+    trials: {},
   }
 }
 
 /**
  * Bring stored progress up to date. Kids still on the first release's
- * Recall Budget defaults (4 s / 3 s) move to the current defaults.
+ * Recall Budget defaults (4 s / 3 s) move to the current defaults; progress
+ * from before Stars and Speed Trials gets empty rewards, and Facts Introduced
+ * before that count as Introduced on the latest Play Day.
  */
 export function migrateKid(kid: KidState): KidState {
   if (kid.settings.recallBudgetMs === 4000 && kid.settings.legendRecallBudgetMs === 3000) {
     kid.settings.recallBudgetMs = DEFAULT_RECALL_BUDGET_MS
     kid.settings.legendRecallBudgetMs = DEFAULT_LEGEND_RECALL_BUDGET_MS
   }
+  kid.stars ??= 0
+  kid.owned ??= []
+  kid.look ??= {}
+  kid.trials ??= {}
+  const day = Math.max(1, kid.journey.playDays.length)
+  for (const f of Object.values(kid.facts)) if (f.introduced) f.introducedDay ??= day
   return kid
 }
 
@@ -89,13 +105,16 @@ export function phaseFor(kid: KidState, date: ISODate): Phase {
 
 function corePlan(kid: KidState, date: ISODate): RoundKind[] {
   if (!kid.placementDone) return ['placement', 'new', 'mixed']
+  // A World's last Play Day ends with its Speed Trial instead of the last two Rounds.
+  const trial = isWorldEnd(playDayNumber(kid, date))
   switch (phaseFor(kid, date)) {
     case 'challenge':
+      if (trial) return ['review', 'new', 'mixed', 'trial']
       return Object.values(kid.facts).some((f) => f.introduced)
         ? ['review', 'new', 'mixed', 'speed', 'weak']
         : ['new', 'review', 'mixed', 'speed', 'weak']
     case 'legend':
-      return ['weak', 'speed', 'mixed']
+      return trial ? ['weak', 'trial'] : ['weak', 'speed', 'mixed']
     case 'free':
       return ['mixed', 'speed']
   }
@@ -159,13 +178,15 @@ export function recordAnswer(kid: KidState, input: AnswerInput): { outcome: Answ
   const answer = input.a * input.b
   const targets = targetsFor(kid, input.date, answer)
   const correct = input.given === answer
-  const outcome = applyAnswer(kid.facts[factId(input.a, input.b)], {
+  const fact = kid.facts[factId(input.a, input.b)]
+  const outcome = applyAnswer(fact, {
     correct,
     ms: input.ms,
     targetMs: targets.targetMs,
     legendTargetMs: targets.legendTargetMs,
     date: input.date,
   })
+  if (fact.introduced) fact.introducedDay ??= playDayNumber(kid, input.date)
 
   day.questions++
   if (correct) {
@@ -200,6 +221,7 @@ export function introduceLesson(kid: KidState, lesson: Lesson, date: ISODate): n
   for (const id of lessonFacts(lesson)) {
     if (kid.facts[id].introduced) continue
     introduce(kid.facts[id], date)
+    kid.facts[id].introducedDay = playDayNumber(kid, date)
     count++
   }
   day.newFacts += count
@@ -211,7 +233,9 @@ export function finishPlacement(kid: KidState, knownFamilies: number[], date: IS
   ensureDay(kid, date) // today's plan stays the placement plan
   for (const family of knownFamilies) {
     for (const [id, f] of Object.entries(kid.facts)) {
-      if (inFamily(id, family)) introduce(f, date, 1)
+      if (!inFamily(id, family)) continue
+      introduce(f, date, 1)
+      f.introducedDay ??= playDayNumber(kid, date)
     }
   }
   kid.placementDone = true
@@ -247,11 +271,13 @@ export interface RoundDone {
 
 export interface RoundResult {
   earned: EarnEvents | null
+  /** Mystery Chest for an earned Play Day, already added to the Kid. */
+  chest: ChestReward | null
   newBest: boolean
   capReached: boolean
 }
 
-export function completeRound(kid: KidState, r: RoundDone): RoundResult {
+export function completeRound(kid: KidState, r: RoundDone, rng: Rng = Math.random): RoundResult {
   const day = ensureDay(kid, r.date)
   day.playMs += r.playMs
   if (r.core) day.coreDone++
@@ -266,12 +292,70 @@ export function completeRound(kid: KidState, r: RoundDone): RoundResult {
   // Core Rounds earn the Play Day; so does reaching the Daily Cap, so a slow
   // Kid is never kept past 9 minutes for it.
   let earned: EarnEvents | null = null
+  let chest: ChestReward | null = null
   if (!day.earned && (day.coreDone >= day.plan.length || day.playMs >= DAILY_CAP_MS)) {
     earned = earnPlayDay(kid.journey, r.date)
     day.earned = true
+    if (earned) chest = openChest(kid, rng)
   }
   cutBatch(kid, r.date)
-  return { earned, newBest, capReached: day.playMs >= DAILY_CAP_MS }
+  return { earned, chest, newBest, capReached: day.playMs >= DAILY_CAP_MS }
+}
+
+// ── Speed Trials ─────────────────────────────────────────
+
+/** Stars for a Speed Trial by its share of Fast Answers. */
+export function trialStars(fast: number, total: number): number {
+  const share = total > 0 ? fast / total : 0
+  return share >= 0.9 ? 3 : share >= 0.75 ? 2 : share >= 0.5 ? 1 : 0
+}
+
+/** World whose Speed Trial a Core Round on `date` plays: the World ending that Play Day. */
+export function trialWorldFor(kid: KidState, date: ISODate): number {
+  return worldOf(playDayNumber(kid, date)) ?? 10
+}
+
+/** Facts Introduced during a World, for the first half of its Speed Trial. */
+export function worldFacts(kid: KidState, world: number): FactId[] {
+  const [first, last] = worldRange(world)
+  return Object.entries(kid.facts)
+    .filter(([, f]) => f.introduced && f.introducedDay !== undefined && f.introducedDay >= first && f.introducedDay <= last)
+    .map(([id]) => id)
+}
+
+/** Last World whose final Play Day has been earned. */
+export function lastCompletedWorld(kid: KidState): number | null {
+  const played = kid.journey.playDays.length
+  let last: number | null = null
+  for (let w = 1; w <= 10 && worldRange(w)[1] <= played; w++) last = w
+  return last
+}
+
+/** The Speed Trial a Kid may retry in Bonus time today: the last completed World's, until it has 3 Stars. */
+export function trialRetry(kid: KidState, date: ISODate): number | null {
+  const next = nextRound(kid, date)
+  if (next?.kind !== 'bonus') return null
+  const w = lastCompletedWorld(kid)
+  return w !== null && (kid.trials[w]?.stars ?? 0) < 3 ? w : null
+}
+
+export interface TrialOutcome {
+  stars: number
+  best: TrialResult
+  /** Stars added to the Kid: only beating the best attempt earns more. */
+  gained: number
+}
+
+export function finishTrial(kid: KidState, world: number, fast: number, total: number): TrialOutcome {
+  const stars = trialStars(fast, total)
+  const prev = kid.trials[world]
+  const gained = Math.max(0, stars - (prev?.stars ?? 0))
+  const tries = (prev?.tries ?? 0) + 1
+  const better = !prev || stars > prev.stars || (stars === prev.stars && fast / total > prev.fast / prev.total)
+  const best: TrialResult = better ? { stars, fast, total, tries } : { ...prev, tries }
+  kid.trials[world] = best
+  kid.stars += gained
+  return { stars, best, gained }
 }
 
 export function summarize(kid: KidState, date: ISODate): DaySummary {

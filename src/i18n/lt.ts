@@ -65,7 +65,6 @@ export const lt: Dict = {
   tier_gold: 'Auksas',
   tier_diamond: 'Deimantas',
   dustyHint: 'Apdulkėjo — atsakyk greitai, kad vėl spindėtų!',
-  changeTheme: 'Keisti nuotykį',
   inactive: 'Dabar žaidi kitame įrenginyje.',
   moveHere: 'Žaisti šiame įrenginyje',
 
@@ -78,6 +77,7 @@ export const lt: Dict = {
   round_speed: 'Greičio raundas',
   round_weak: 'Kietieji riešutėliai',
   round_bonus: 'Papildomas raundas',
+  round_trial: 'Greičio išbandymas',
   roundOf: 'Raundas {n} iš {total}',
   newFact: 'Naujas!',
   rule_1: 'Bet koks skaičius × 1 lieka toks pat: 7 × 1 = 7.',
@@ -138,6 +138,44 @@ export const lt: Dict = {
   worldUnlocked: 'Naujas pasaulis: {world}',
   awesome: 'Šaunu!',
 
+  // Speed Trial
+  trialIntro: '20 klausimų. Atsakyk greitai ir laimėk žvaigždučių!',
+  trialRules: '⭐ 50 % greitai · ⭐⭐ 75 % · ⭐⭐⭐ 90 %',
+  trialBest: 'Tavo geriausias: {stars}',
+  trialFast: '{fast} iš {total} greitai ({pct} %)',
+  trialGained: {
+    one: '+{n} žvaigždutė!',
+    few: '+{n} žvaigždutės!',
+    other: '+{n} žvaigždučių!',
+  },
+  trialNoStars: 'Treniruokis toliau — dar galėsi pabandyti per papildomą raundą!',
+  trialAgain: 'Greičio išbandymas dar kartą',
+
+  // Mystery Chest
+  chestTitle: 'Paslaptinga skrynia',
+  chestStars: {
+    one: 'Radai {n} žvaigždutę!',
+    few: 'Radai {n} žvaigždutes!',
+    other: 'Radai {n} žvaigždučių!',
+  },
+  chestItem: 'Radai {item}! Užsidėk jį parduotuvėje.',
+
+  // Shop
+  stars: 'Žvaigždutės',
+  shopTitle: 'Parduotuvė',
+  slot_hat: 'Kepurės',
+  slot_buddy: 'Draugai',
+  slot_sparkle: 'Blizgučiai',
+  shopPick: 'Paspausk ir pasimatuok!',
+  shopBuy: 'Pirkti už ⭐ {price}',
+  shopNeed: {
+    one: 'Trūksta {n} žvaigždutės',
+    other: 'Trūksta {n} žvaigždučių',
+  },
+  shopWear: 'Užsidėti',
+  shopTakeOff: 'Nusiimti',
+  shopHow: 'Žvaigždučių ⭐ gausi iš paslaptingos skrynios 🎁 po kiekvienos žaidimo dienos ir iš greičio išbandymo 🏆 kiekvieno pasaulio pabaigoje.',
+
   // Help for kids
   helpButton: 'Kaip žaisti?',
   helpTitle: 'Kaip žaisti',
@@ -152,6 +190,8 @@ export const lt: Dict = {
   helpDusty: '💨 Po klaidos medalis apdulka. Atsakyk greitai dar kartą ir jį nublizgink. Medalio niekada neprarasi!',
   helpBadges: '❓ Kiekvieno pasaulio pabaigoje tavo kelionėje laukia paslaptingas ženkliukas. Pasiek jį ir sužinosi, kas viduje!',
   helpWorlds: '🗺️ 7 pasauliai × 7 dienos = 49 dienos. Paskui Legenda — iki pat 10 × 10 = 100 dienų!',
+  helpTrial: '🏆 Paskutinė kiekvieno pasaulio diena baigiasi greičio išbandymu: 20 klausimų, iki ⭐⭐⭐. Nori daugiau žvaigždučių? Pabandyk dar kartą per papildomą raundą!',
+  helpStars: '🎁 Po kiekvienos žaidimo dienos atidarai paslaptingą skrynią. Žvaigždutes ⭐ išleisk parduotuvėje kepurėms ir draugams — paspausk savo paveiksliuką viršuje!',
   helpClose: 'Supratau!',
   tipFire0: 'Žaisk šiandien ir įžiebk savo ugnį! 🔥',
   tipFire: {
@@ -219,6 +259,8 @@ export const lt: Dict = {
   statsCorrect: 'Teisingi',
   statsFast: 'Greiti',
   slowest: 'Lėčiausi pavyzdžiai',
+  statsStars: 'Žvaigždutės: {n} · Daiktai: {items}',
+  statsTrials: 'Greičio išbandymai',
   resetKid: 'Ištrinti šio vaiko pažangą',
   resetConfirm: 'Ištrinti visą vaiko ({name}) pažangą šiame įrenginyje? To nebus galima atšaukti.',
   error_bad_secret: 'Neteisingas slaptasis raktas',

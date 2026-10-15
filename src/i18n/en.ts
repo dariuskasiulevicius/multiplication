@@ -65,7 +65,6 @@ export const en = {
   tier_gold: 'Gold',
   tier_diamond: 'Diamond',
   dustyHint: 'Dusty — answer it fast to polish it!',
-  changeTheme: 'Change adventure',
   inactive: 'You are playing on another device now.',
   moveHere: 'Play on this device',
 
@@ -78,6 +77,7 @@ export const en = {
   round_speed: 'Speed round',
   round_weak: 'Tricky ones',
   round_bonus: 'Bonus round',
+  round_trial: 'Speed Trial',
   roundOf: 'Round {n} of {total}',
   newFact: 'New!',
   rule_1: 'Any number × 1 stays the same: 7 × 1 = 7.',
@@ -135,6 +135,42 @@ export const en = {
   worldUnlocked: 'New world: {world}',
   awesome: 'Awesome!',
 
+  // Speed Trial
+  trialIntro: '20 questions. Answer fast to win stars!',
+  trialRules: '⭐ 50 % fast · ⭐⭐ 75 % · ⭐⭐⭐ 90 %',
+  trialBest: 'Your best: {stars}',
+  trialFast: '{fast} of {total} fast ({pct} %)',
+  trialGained: {
+    one: '+{n} star!',
+    other: '+{n} stars!',
+  },
+  trialNoStars: 'Keep practising — you can try again in bonus time!',
+  trialAgain: 'Speed Trial again',
+
+  // Mystery Chest
+  chestTitle: 'Mystery Chest',
+  chestStars: {
+    one: 'You found {n} star!',
+    other: 'You found {n} stars!',
+  },
+  chestItem: 'You found {item}! Put it on in the Shop.',
+
+  // Shop
+  stars: 'Stars',
+  shopTitle: 'Shop',
+  slot_hat: 'Hats',
+  slot_buddy: 'Buddies',
+  slot_sparkle: 'Sparkles',
+  shopPick: 'Tap something to try it on!',
+  shopBuy: 'Buy for ⭐ {price}',
+  shopNeed: {
+    one: 'You need {n} more star',
+    other: 'You need {n} more stars',
+  },
+  shopWear: 'Put on',
+  shopTakeOff: 'Take off',
+  shopHow: 'Get ⭐ from the Mystery Chest 🎁 after every Play Day and from the Speed Trial 🏆 at the end of every world.',
+
   // Help for kids
   helpButton: 'How to play?',
   helpTitle: 'How to play',
@@ -149,6 +185,8 @@ export const en = {
   helpDusty: '💨 A mistake makes a medal dusty. Answer fast again to polish it. You never lose a medal!',
   helpBadges: '❓ A mystery badge waits at the end of every world on your Journey. Reach it to find out what is inside!',
   helpWorlds: '🗺️ 7 worlds × 7 days = 49 days. Then Legend, all the way to 10 × 10 = 100 days!',
+  helpTrial: '🏆 The last day of every world ends with a Speed Trial: 20 questions, up to ⭐⭐⭐. Want more stars? Try it again in bonus time!',
+  helpStars: '🎁 After every Play Day you open a Mystery Chest. Spend your ⭐ in the Shop on hats and buddies — tap your picture at the top!',
   helpClose: 'Got it!',
   tipFire0: 'Play today to light your fire! 🔥',
   tipFire: {
@@ -212,6 +250,8 @@ export const en = {
   statsCorrect: 'Correct',
   statsFast: 'Fast',
   slowest: 'Slowest facts',
+  statsStars: 'Stars: {n} · Items: {items}',
+  statsTrials: 'Speed Trials',
   resetKid: "Delete this Kid's progress",
   resetConfirm: "Delete all of {name}'s progress on this device? This can't be undone.",
   error_bad_secret: 'Wrong secret',

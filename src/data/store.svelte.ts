@@ -5,7 +5,16 @@ import type { KidState } from '../core/types'
 import type { SetupPayload } from '../core/setupLink'
 import { pushBatches } from './sync'
 
-export type Screen = 'loading' | 'welcome' | 'parentSetup' | 'onboarding' | 'home' | 'play' | 'settings' | 'parent'
+export type Screen =
+  | 'loading'
+  | 'welcome'
+  | 'parentSetup'
+  | 'onboarding'
+  | 'home'
+  | 'play'
+  | 'shop'
+  | 'settings'
+  | 'parent'
 
 export interface ParentConfig {
   url: string
@@ -18,6 +27,8 @@ export const app = $state({
   kid: null as KidState | null,
   /** Setup Link waiting to be applied by onboarding. */
   setup: null as SetupPayload | null,
+  /** World whose Speed Trial Play should start with instead of the next Round. */
+  trialRetry: null as number | null,
   updateReady: false,
   syncing: false,
   syncError: null as string | null,

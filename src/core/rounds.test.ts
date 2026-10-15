@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { factId, initialFacts, lessonFacts, LESSONS } from './facts'
 import { introduce } from './mastery'
 import { seeded } from './rng'
-import { buildRound, choiceOptions, ROUND_SIZE, RoundRunner, type RoundItem } from './rounds'
+import { buildRound, choiceOptions, ROUND_SIZE, RoundRunner, TRIAL_SIZE, type RoundItem } from './rounds'
 
 const ctx = (facts = initialFacts(), seed = 1) => ({ facts, date: '2026-10-05', recentDays: ['2026-10-05'], rng: seeded(seed) })
 
@@ -27,6 +27,16 @@ describe('buildRound', () => {
     expect(intros).toHaveLength(LESSONS[2].pairs.length)
     const practiced = ids(r.items)
     for (const id of lessonFacts(LESSONS[2])) expect(practiced.filter((x) => x === id)).toHaveLength(2)
+  })
+
+  it('a Speed Trial has 20 questions, about half from its World', () => {
+    const facts = initialFacts()
+    for (const l of LESSONS.slice(0, 4)) for (const id of lessonFacts(l)) introduce(facts[id], '2026-10-01')
+    const world = lessonFacts(LESSONS[3])
+    const q = ids(buildRound('trial', { ...ctx(facts), worldFacts: world }).items)
+    expect(q).toHaveLength(TRIAL_SIZE)
+    const own = q.filter((id) => world.includes(id)).length
+    expect(own).toBeGreaterThanOrEqual(Math.min(world.length, TRIAL_SIZE / 2))
   })
 
   it('never asks the same Fact twice in a row', () => {
@@ -76,6 +86,12 @@ describe('RoundRunner', () => {
     expect(r.items[3]).toEqual({ type: 'typed', a: 2, b: 1, retry: true })
     while (!r.done) r.answer({ correct: false, fast: false })
     expect(r.items.filter((i) => i.type === 'typed' && i.b === 1)).toHaveLength(2)
+  })
+
+  it('a Speed Trial asks every question once', () => {
+    const r = new RoundRunner([1, 2, 3].map((b) => ({ type: 'typed', a: 4, b }) as RoundItem), false)
+    while (!r.done) r.answer({ correct: false, fast: false })
+    expect(r.answered).toBe(3)
   })
 
   it('counts combos of Fast Answers', () => {

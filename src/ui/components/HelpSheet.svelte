@@ -27,6 +27,8 @@
     </section>
     <section class="card">{t('helpBadges')}</section>
     <section class="card">{t('helpWorlds')}</section>
+    <section class="card">{t('helpTrial')}</section>
+    <section class="card">{t('helpStars')}</section>
 
     <button class="btn big" onclick={onclose}>{t('helpClose')}</button>
   </div>

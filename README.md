@@ -7,6 +7,7 @@ A browser game that teaches kids the whole 1–10 multiplication table **to spee
 - Every day: a warm-up, about five short Rounds (review, new facts, mix, speed, tricky ones), then "see you tomorrow".
 - Speed is judged against each kid's own typing speed plus a Recall Budget, so a 7-year-old and an 11-year-old are both challenged fairly.
 - Facts level up on a 10 × 10 Sticker Board: bronze → silver → gold (mastered) → diamond.
+- Each World's last day ends with a 20-question **Speed Trial** worth up to ⭐⭐⭐; every Play Day opens a **Mystery Chest**. Stars buy hats, buddies and sparkles for the kid's avatar in the **Shop** (tap the avatar). Looks only — nothing in the shop changes the game.
 - Four themes (space, pirates, unicorns, pets), English and Lithuanian.
 - Works offline after the first visit and can be added to the home screen.
 
@@ -21,7 +22,7 @@ Play it at **https://dariuskasiulevicius.github.io/multiplication/**
 3. Add each kid's name. You get a **setup link** and a QR code per kid.
 4. Open each link **on that kid's own device**. The kid picks a theme and the first day starts with a short quiz to find what they already know.
 
-On a kid's device, ⚙️ opens the kid's own settings (how to play, language, sound, adventure). The small **Settings for parents** link at the bottom leads, behind a grown-up maths question, to the Recall Budget, stats, sync, restore and backups.
+On a kid's device, ⚙️ opens the kid's own settings (how to play, language, sound, adventure). The small **Settings for parents** link at the bottom leads, behind a grown-up maths question, to the Recall Budget, stats (including Stars and Speed Trial results), sync, restore and backups.
 
 **iPhone / iPad:** a game added to the home screen keeps its own storage, separate from Safari. The setup screen walks the kid through it: copy the setup link, add the game to the home screen, open it from there and tap **Paste setup link**.
 

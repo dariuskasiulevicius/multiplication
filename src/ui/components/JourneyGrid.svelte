@@ -3,6 +3,7 @@
   import type { ISODate, KidState } from '../../core/types'
   import { i18n, t } from '../../i18n/index.svelte'
   import type { Theme } from '../../themes'
+  import { starText } from '../stars'
 
   let { kid, theme, date }: { kid: KidState; theme: Theme; date: ISODate } = $props()
 
@@ -59,6 +60,7 @@
     {#if shown <= played}
       {theme.badges[w - 1].emoji} <b>{theme.badges[w - 1].name[i18n.lang]}</b> · {theme.worlds[w - 1].emoji}
       {theme.worlds[w - 1].name[i18n.lang]}
+      {#if kid.trials[w]}<br />🏆 {t('round_trial')}: {starText(kid.trials[w].stars)}{/if}
     {:else}
       🎁 {t('mysteryBadge', { n: shown })}
     {/if}

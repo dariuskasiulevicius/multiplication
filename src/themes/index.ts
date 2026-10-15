@@ -40,7 +40,7 @@ export const THEMES: Record<ThemeId, Theme> = {
     id: 'space',
     name: { en: 'Space voyage', lt: 'Kelionė į kosmosą' },
     avatar: '🚀',
-    stamp: '⭐',
+    stamp: '🌕',
     colors: {
       bg1: '#120f3a',
       bg2: '#2b1f6b',

@@ -155,6 +155,14 @@
       <p class="small">
         🥉 {tiers.bronze} · 🥈 {tiers.silver} · 🥇 {tiers.gold} · 💎 {tiers.diamond} · ⬜ {tiers.unseen}
       </p>
+      <p class="small">⭐ {t('statsStars', { n: kid.stars, items: kid.owned.length })}</p>
+      {#if Object.keys(kid.trials).length}
+        <p class="small">
+          🏆 {t('statsTrials')}:
+          {#each Object.entries(kid.trials) as [w, r], i (w)}{i ? ' · ' : ' '}{t('worldN', { n: w })}
+            {'⭐'.repeat(r.stars) || '0⭐'} ({Math.round((r.fast / r.total) * 100)} %, ×{r.tries}){/each}
+        </p>
+      {/if}
       {#if days.length}
         <table>
           <thead>

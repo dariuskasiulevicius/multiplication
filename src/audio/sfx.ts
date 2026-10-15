@@ -66,6 +66,11 @@ export const sfx = {
     ;[C5, E5, G5, C6].forEach((f) => tone(f, 0.34, 0.9, 'triangle', 0.1))
     tone(C6 * 2, 0.5, 0.5, 'sine', 0.06)
   },
+  /** Coin clink: something bought in the Shop. */
+  buy: () => {
+    tone(1318.5, 0, 0.08, 'square', 0.05)
+    tone(1975.5, 0.07, 0.25, 'triangle', 0.08)
+  },
   dayDone: () => {
     ;[C5, E5, G5, C6, G5, C6].forEach((f, i) => tone(f, i * 0.11, 0.3, 'triangle', 0.13))
     tone(C6 * 1.5, 0.7, 0.6, 'sine', 0.1)
