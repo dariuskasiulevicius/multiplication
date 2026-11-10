@@ -5,8 +5,9 @@ import { addTap, baseline, emptyCalibration, median } from './calibration'
 import { openChest } from './cosmetics'
 import { digits, factId, inFamily, initialFacts, lessonFacts, type Lesson } from './facts'
 import { earnPlayDay, isWorldEnd, newJourney, phaseOf, worldOf, worldRange, type EarnEvents } from './journey'
-import { applyAnswer, countTiers, introduce, type AnswerOutcome } from './mastery'
+import { applyAnswer, countTiers, introduce, isGuess, type AnswerOutcome } from './mastery'
 import { uid, type Rng } from './rng'
+import { ROUND_SIZE, SIZABLE, TRIAL_SIZE } from './rounds'
 import type {
   AnswerRow,
   Batch,
@@ -29,6 +30,9 @@ export const DEFAULT_RECALL_BUDGET_MS = 10_000
 export const DEFAULT_LEGEND_RECALL_BUDGET_MS = 6000
 const HISTORY_DAYS = 120
 const DAY_SAMPLES = 300
+/** Play Days whose pace sizes today's Rounds. */
+const PACE_DAYS = 3
+const MAX_ROUND_SIZE = 40
 
 export interface NewKid {
   kidId: string
@@ -90,6 +94,7 @@ export function migrateKid(kid: KidState): KidState {
   kid.look ??= {}
   kid.trials ??= {}
   kid.revealedWorld ??= lastCompletedWorld(kid) ?? 0
+  if (kid.day) kid.day.roundSize ??= ROUND_SIZE
   const day = Math.max(1, kid.journey.playDays.length)
   for (const f of Object.values(kid.facts)) if (f.introduced) f.introducedDay ??= day
   return kid
@@ -115,20 +120,49 @@ function corePlan(kid: KidState, date: ISODate): RoundKind[] {
       return Object.values(kid.facts).some((f) => f.introduced)
         ? ['review', 'new', 'mixed', 'speed', 'weak']
         : ['new', 'review', 'mixed', 'speed', 'weak']
-    case 'legend':
-      return trial ? ['weak', 'trial'] : ['weak', 'speed', 'mixed']
+    case 'legend': {
+      const plan: RoundKind[] = trial ? ['weak', 'trial'] : ['weak', 'speed', 'mixed']
+      // Facts still not Introduced keep getting their New Facts round.
+      if (Object.values(kid.facts).some((f) => !f.introduced)) plan.splice(1, 0, 'new')
+      return plan
+    }
     case 'free':
       return ['mixed', 'speed']
   }
+}
+
+/** Average play time per question over the last few Play Days before `date`, or null without any. */
+export function msPerQuestion(kid: KidState, date: ISODate): number | null {
+  const days = new Set(kid.journey.playDays.filter((d) => d < date).slice(-PACE_DAYS))
+  let ms = 0
+  let questions = 0
+  for (const h of kid.history) {
+    if (!days.has(h.date)) continue
+    ms += h.minutes * 60_000
+    questions += h.questions
+  }
+  return ms > 0 && questions > 0 ? ms / questions : null
+}
+
+/** Questions per sizable Core Round, so that all of `plan` fills about the Daily Cap at the Kid's recent pace. */
+export function roundSizeFor(kid: KidState, date: ISODate, plan: RoundKind[]): number {
+  const pace = msPerQuestion(kid, date)
+  const sizable = plan.filter((k) => SIZABLE.includes(k)).length
+  if (pace === null || sizable === 0) return ROUND_SIZE
+  const fixed = plan.filter((k) => !SIZABLE.includes(k)).reduce((n, k) => n + (k === 'trial' ? TRIAL_SIZE : ROUND_SIZE), 0)
+  const size = Math.round((DAILY_CAP_MS / pace - fixed) / sizable)
+  return Math.min(MAX_ROUND_SIZE, Math.max(ROUND_SIZE, size))
 }
 
 /** Today's progress; rolling over to a new date closes the previous day. */
 export function ensureDay(kid: KidState, date: ISODate): DayProgress {
   if (kid.day?.date === date) return kid.day
   if (kid.day && kid.outbox.length > 0) cutBatch(kid, kid.day.date)
+  const plan = corePlan(kid, date)
   kid.day = {
     date,
-    plan: corePlan(kid, date),
+    plan,
+    roundSize: roundSizeFor(kid, date, plan),
     coreDone: 0,
     bonusDone: 0,
     playMs: 0,
@@ -161,6 +195,18 @@ export function recentDays(kid: KidState, date: ISODate): ISODate[] {
   return [...kid.journey.playDays.slice(-3), date]
 }
 
+/** Share of answers missed over the recent days, 0–1; Guesses are not answers. */
+export function recentMissRate(kid: KidState, date: ISODate): number {
+  let questions = 0
+  let correct = 0
+  for (const d of new Set(recentDays(kid, date))) {
+    const day = kid.day?.date === d ? kid.day : kid.history.find((h) => h.date === d)
+    questions += day?.questions ?? 0
+    correct += day?.correct ?? 0
+  }
+  return questions > 0 ? (questions - correct) / questions : 0
+}
+
 export function recordTap(kid: KidState, digitCount: number, ms: number): void {
   addTap(kid.calibration, digitCount, ms)
 }
@@ -175,12 +221,23 @@ export interface AnswerInput {
   now: Date
 }
 
-export function recordAnswer(kid: KidState, input: AnswerInput): { outcome: AnswerOutcome; targets: Targets } {
+export interface Recorded {
+  outcome: AnswerOutcome
+  targets: Targets
+  /** A Guess counts for nothing: no miss, no stats, no answer row. */
+  guess: boolean
+}
+
+export function recordAnswer(kid: KidState, input: AnswerInput): Recorded {
   const day = ensureDay(kid, input.date)
   const answer = input.a * input.b
   const targets = targetsFor(kid, input.date, answer)
   const correct = input.given === answer
   const fact = kid.facts[factId(input.a, input.b)]
+  if (isGuess(input.given, answer)) {
+    const outcome = { correct: false, fast: false, legendFast: false, tierBefore: fact.tier, tierAfter: fact.tier }
+    return { outcome, targets, guess: true }
+  }
   const outcome = applyAnswer(fact, {
     correct,
     ms: input.ms,
@@ -213,7 +270,7 @@ export function recordAnswer(kid: KidState, input: AnswerInput): { outcome: Answ
     round: input.round,
   }
   kid.outbox.push(row)
-  return { outcome, targets }
+  return { outcome, targets, guess: false }
 }
 
 /** Introduce a lesson's Facts when its New Facts round starts. */

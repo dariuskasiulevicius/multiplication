@@ -59,10 +59,14 @@ _Avoid_: Time limit, timeout (nothing ever times out)
 Baseline for the answer's digit count plus Legend Recall Budget; checked for every answer from Play Day 1.
 
 **Fast Answer**:
-A correct answer given within Target Time.
+A correct answer given within Target Time on the counted **Try**.
 
 **Slow Answer**:
 A correct answer given after Target Time; counts as correct but earns no speed credit.
+
+**Guess**:
+A wrong answer typed as one repeated digit (11, 22 … 99) — never a real product, so it is not counted: no miss, no Dusty mark, not in stats or the Family Sheet.
+_Avoid_: Mash, spam
 
 **Mastered**:
 A Fact that received Fast Answers on 3 different days of play.
@@ -85,7 +89,14 @@ A one-time ~3 minute quiz on a Kid's first launch that detects Facts the Kid alr
 Five "type the number you see" taps that open every Session and update Baseline.
 
 **Round**:
-About 10 questions of one kind — Review, New Facts, Speed or Mixed.
+A run of questions of one kind — Review, New Facts, Speed or Mixed. Review, New Facts, Mixed and Weak Fact Rounds take the day's **Round Size**; a Speed Round stays 10 questions so its best time compares, a **Speed Trial** 20.
+
+**Round Size**:
+The number of questions in each sizable Core Round, set when the day starts so that the **Core Rounds** fill about the **Daily Cap** at the Kid's average time per question over the last 3 **Play Days**; between 10 and 40, and 10 without earlier Play Days.
+
+**Try**:
+One attempt at a question. A wrong Try is followed by another without showing the answer; only after the third wrong Try in a row is the answer shown, to be typed in. The first Try that is not a **Guess** is the counted one — it alone goes to the Fact's Tier and stats, so a later right Try is still a miss.
+_Avoid_: Attempt, retry (a retry is the missed Fact asked again later in the Round)
 
 **Core Rounds**:
 The fixed set of Rounds (about 5 normally, 3 in Legend) that must be finished to earn a Play Day.
@@ -124,7 +135,7 @@ A 20-question test that is the last Core Round of a World's final Play Day — a
 _Avoid_: Boss, exam, test
 
 **Legend**:
-The phase from Play Day 50 to Play Day 100, with fewer Core Rounds, speed judged by Legend Recall Budget, played through three Legend Worlds. It is opened by the Challenge ceremony after Play Day 49 and closed by the Legend ceremony after Play Day 100.
+The phase from Play Day 50 to Play Day 100, with fewer Core Rounds (plus a New Facts Round while any Fact is not yet Introduced), speed judged by Legend Recall Budget, played through three Legend Worlds. It is opened by the Challenge ceremony after Play Day 49 and closed by the Legend ceremony after Play Day 100.
 _Avoid_: Expert mode, extension
 
 **Free Play**:
@@ -194,7 +205,7 @@ The settings area on a Kid's device, behind an adult gate.
 - The **Journey Grid** (Play Days) and the **Sticker Board** (Facts) are both 10 × 10; the finish line is both full
 - **Target Time** = **Baseline** + **Recall Budget**; a **Fast Answer** beats it
 - A **Fact** becomes **Mastered** (Gold) after **Fast Answers** on 3 different days; Fast Answers in the **Placement Quiz** count toward this
-- A New Facts **Round** turns into a **Weak Fact** Round when 6 or more Facts were missed in the last 3 **Play Days** — consolidate before adding more
+- Every **Play Day** has a New Facts **Round** until all **Facts** are **Introduced**; it teaches one lesson (two **Fact Pairs**), or just one Fact Pair when more than 15% of answers in the last 3 Play Days and today were missed
 - A **Parent** creates one **Setup Link** per **Kid**; all **Kids** **Sync** into one **Family Sheet**
 
 ## Example dialogue
@@ -218,3 +229,6 @@ The settings area on a Kid's device, behind an adult gate.
 - Kids did not understand "streak" or "tier" — resolved: the kid-facing screens say "fire" (🔥, LT "ugnelė") for the **Streak** and "medal" (🥉 🥈 🥇 💎) for a **Tier**; the domain terms stay as defined here.
 - Mastery was first counted in **Play Days** — resolved: any day with a Fast Answer counts, even if that day's **Core Rounds** were not finished, because those answers still count toward **Facts**.
 - A slow Kid could need more than 9 minutes for all **Core Rounds** — resolved: reaching the **Daily Cap** also earns the **Play Day**, so the daily time promise always holds.
+- New Facts **Rounds** used to turn into **Weak Fact** Rounds after 6 misses in the last 3 **Play Days** — resolved: at a usual ~8% miss rate on ~50 answers a day that threshold was always reached, so one Kid got no New Facts for three weeks. New Facts now come every Play Day; many recent misses only make the lesson smaller.
+- A draining speed bar showed **Target Time** during each question — resolved: removed, as it pushed Kids into fast **Guesses**; speed is still judged, just not shown.
+- Core Rounds were 10 questions each, about 3 minutes a day for a quick Kid — resolved: the **Round Size** grows with the Kid's pace so a day is about 9 minutes, in Legend too (fewer, longer Rounds).

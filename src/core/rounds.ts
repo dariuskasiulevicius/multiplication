@@ -1,12 +1,14 @@
-import { factId, lessonFacts, nextLesson, parseFactId, type Lesson } from './facts'
+import { factId, lessonFacts, nextLesson, pairFacts, parseFactId, type Lesson } from './facts'
 import { isDue, rankWeak } from './mastery'
 import { shuffle, type Rng } from './rng'
 import type { FactId, FactState, ISODate, RoundKind } from './types'
 
 export const ROUND_SIZE = 10
 export const TRIAL_SIZE = 20
-/** Recent misses above this skip new Facts for a day of consolidation. */
-const CONSOLIDATE_AT = 6
+/** Rounds sized to the day; a Speed Round keeps ROUND_SIZE so its best time compares. */
+export const SIZABLE: readonly RoundKind[] = ['review', 'new', 'mixed', 'weak']
+/** A recent miss rate above this teaches one Fact Pair instead of the whole lesson. */
+export const SMALL_LESSON_ABOVE = 0.15
 
 export type RoundItem =
   | { type: 'rule'; family: number }
@@ -25,6 +27,10 @@ export interface BuildContext {
   date: ISODate
   /** Last few Play Days plus today, for "recent miss" checks. */
   recentDays: ISODate[]
+  /** Share of answers missed over `recentDays`, 0–1. */
+  recentMissRate?: number
+  /** Questions in a sizable Round today (ROUND_SIZE if not given). */
+  roundSize?: number
   rng: Rng
   /** Facts Introduced in the World of a Speed Trial. */
   worldFacts?: FactId[]
@@ -70,40 +76,44 @@ function spread(ids: FactId[]): FactId[] {
   return out
 }
 
-function recentMisses(ctx: BuildContext): number {
-  const recent = new Set(ctx.recentDays)
-  return Object.values(ctx.facts).filter((f) => f.introduced && f.lastWrong && recent.has(f.lastWrong)).length
+/** Only the lesson's first Fact Pair still to teach; a rule lesson stays whole, as one rule teaches it. */
+function firstPair(lesson: Lesson, facts: Record<FactId, FactState>): Lesson {
+  if (lesson.rule !== null) return lesson
+  const pair = lesson.pairs.find((p) => pairFacts(p.a, p.b).some((id) => !facts[id].introduced))
+  return pair ? { rule: null, pairs: [pair] } : lesson
 }
 
 export function buildRound(kind: RoundKind, ctx: BuildContext): BuiltRound {
   const all = introducedIds(ctx)
   const weak = rankWeak(ctx.facts, ctx.recentDays)
   const random = shuffle(all, ctx.rng)
+  const size = SIZABLE.includes(kind) ? (ctx.roundSize ?? ROUND_SIZE) : ROUND_SIZE
 
   switch (kind) {
     case 'new': {
+      // New Facts come every day; after many recent misses just fewer of them.
       const lesson = nextLesson(ctx.facts)
       if (!lesson) return buildRound('mixed', ctx)
-      if (all.length > 0 && recentMisses(ctx) >= CONSOLIDATE_AT) return buildRound('weak', ctx)
-      return newFactsRound(lesson, ctx, weak)
+      const small = (ctx.recentMissRate ?? 0) > SMALL_LESSON_ABOVE
+      return newFactsRound(small ? firstPair(lesson, ctx.facts) : lesson, ctx, weak, size)
     }
     case 'review': {
       const due = shuffle(
         all.filter((id) => isDue(ctx.facts[id], ctx.date)),
         ctx.rng,
       ).sort((x, y) => (ctx.facts[x].due ?? '').localeCompare(ctx.facts[y].due ?? ''))
-      return round(kind, fill(ROUND_SIZE, due, weak, random), ctx)
+      return round(kind, fill(size, due, weak, random), ctx)
     }
     case 'speed': {
       const known = [...random].sort((x, y) => ctx.facts[y].box - ctx.facts[x].box)
-      return round(kind, fill(ROUND_SIZE, known), ctx)
+      return round(kind, fill(size, known), ctx)
     }
     case 'weak':
-      return round(kind, fill(ROUND_SIZE, weak), ctx)
+      return round(kind, fill(size, weak), ctx)
     case 'mixed':
     case 'bonus': {
       const due = all.filter((id) => isDue(ctx.facts[id], ctx.date))
-      const picked = fill(ROUND_SIZE, weak.slice(0, 4), shuffle(due, ctx.rng).slice(0, 3), random, weak)
+      const picked = fill(size, weak.slice(0, 4), shuffle(due, ctx.rng).slice(0, 3), random, weak)
       return round(kind, picked, ctx)
     }
     case 'trial': {
@@ -120,14 +130,14 @@ function round(kind: RoundKind, ids: FactId[], ctx: BuildContext): BuiltRound {
   return { kind, items: spread(shuffle(ids, ctx.rng)).map(typed), lesson: null }
 }
 
-function newFactsRound(lesson: Lesson, ctx: BuildContext, weak: FactId[]): BuiltRound {
+function newFactsRound(lesson: Lesson, ctx: BuildContext, weak: FactId[], size: number): BuiltRound {
   const fresh = lessonFacts(lesson).filter((id) => !ctx.facts[id].introduced)
   const items: RoundItem[] = []
 
   if (lesson.rule !== null) {
     // One rule card teaches the whole family; practice a sample of it.
     items.push({ type: 'rule', family: lesson.rule })
-    const practice = fill(ROUND_SIZE, shuffle(fresh, ctx.rng))
+    const practice = fill(size, shuffle(fresh, ctx.rng))
     items.push(...spread(practice).map(typed))
     return { kind: 'new', items, lesson }
   }
@@ -140,10 +150,10 @@ function newFactsRound(lesson: Lesson, ctx: BuildContext, weak: FactId[]): Built
   // Each new Fact twice, the rest from the Kid's Weak Facts (or more of the new ones).
   const practice = [...fresh, ...fresh]
   for (const id of weak) {
-    if (practice.length >= ROUND_SIZE) break
+    if (practice.length >= size) break
     practice.push(id)
   }
-  for (let i = 0; practice.length < ROUND_SIZE && fresh.length > 0; i++) practice.push(fresh[i % fresh.length])
+  for (let i = 0; practice.length < size && fresh.length > 0; i++) practice.push(fresh[i % fresh.length])
   items.push(...spread(shuffle(practice, ctx.rng)).map(typed))
   return { kind: 'new', items, lesson }
 }

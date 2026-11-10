@@ -66,6 +66,8 @@ export interface DayProgress {
   date: ISODate
   /** Core Rounds for this day, fixed when the day starts. */
   plan: RoundKind[]
+  /** Questions in each sizable Core Round, fixed when the day starts. */
+  roundSize: number
   coreDone: number
   bonusDone: number
   /** Active play time today, summed over Sessions. */
