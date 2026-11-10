@@ -25,7 +25,9 @@ import type {
   TrialResult,
 } from './types'
 
-export const DAILY_CAP_MS = 9 * 60_000
+export const DEFAULT_DAILY_MINUTES = 9
+export const MIN_DAILY_MINUTES = 3
+export const MAX_DAILY_MINUTES = 15
 export const DEFAULT_RECALL_BUDGET_MS = 10_000
 export const DEFAULT_LEGEND_RECALL_BUDGET_MS = 6000
 const HISTORY_DAYS = 120
@@ -54,6 +56,7 @@ export function createKid(o: NewKid): KidState {
     settings: {
       recallBudgetMs: DEFAULT_RECALL_BUDGET_MS,
       legendRecallBudgetMs: DEFAULT_LEGEND_RECALL_BUDGET_MS,
+      dailyMinutes: DEFAULT_DAILY_MINUTES,
       sound: true,
       lang: o.lang,
       theme: o.theme,
@@ -89,6 +92,7 @@ export function migrateKid(kid: KidState): KidState {
     kid.settings.recallBudgetMs = DEFAULT_RECALL_BUDGET_MS
     kid.settings.legendRecallBudgetMs = DEFAULT_LEGEND_RECALL_BUDGET_MS
   }
+  kid.settings.dailyMinutes ??= DEFAULT_DAILY_MINUTES
   kid.stars ??= 0
   kid.owned ??= []
   kid.look ??= {}
@@ -131,6 +135,18 @@ function corePlan(kid: KidState, date: ISODate): RoundKind[] {
   }
 }
 
+/** The Daily Cap: the Kid's daily minutes of play. */
+export function dailyCapMs(kid: KidState): number {
+  return kid.settings.dailyMinutes * 60_000
+}
+
+/** Set the Kid's daily minutes; a day whose Rounds have not started yet is resized to fit. */
+export function setDailyMinutes(kid: KidState, minutes: number, date: ISODate): void {
+  kid.settings.dailyMinutes = Math.min(MAX_DAILY_MINUTES, Math.max(MIN_DAILY_MINUTES, Math.round(minutes)))
+  const day = kid.day?.date === date ? kid.day : null
+  if (day && day.coreDone === 0 && day.bonusDone === 0) day.roundSize = roundSizeFor(kid, date, day.plan)
+}
+
 /** Average play time per question over the last few Play Days before `date`, or null without any. */
 export function msPerQuestion(kid: KidState, date: ISODate): number | null {
   const days = new Set(kid.journey.playDays.filter((d) => d < date).slice(-PACE_DAYS))
@@ -150,7 +166,7 @@ export function roundSizeFor(kid: KidState, date: ISODate, plan: RoundKind[]): n
   const sizable = plan.filter((k) => SIZABLE.includes(k)).length
   if (pace === null || sizable === 0) return ROUND_SIZE
   const fixed = plan.filter((k) => !SIZABLE.includes(k)).reduce((n, k) => n + (k === 'trial' ? TRIAL_SIZE : ROUND_SIZE), 0)
-  const size = Math.round((DAILY_CAP_MS / pace - fixed) / sizable)
+  const size = Math.round((dailyCapMs(kid) / pace - fixed) / sizable)
   return Math.min(MAX_ROUND_SIZE, Math.max(ROUND_SIZE, size))
 }
 
@@ -315,7 +331,7 @@ export function nextRound(kid: KidState, date: ISODate): NextRound | null {
   const plan = day?.plan ?? corePlan(kid, date)
   const coreDone = day?.coreDone ?? 0
   if (!day?.earned) return { kind: plan[coreDone], core: true, index: coreDone + 1, total: plan.length }
-  if (day.playMs < DAILY_CAP_MS) return { kind: 'bonus', core: false, index: day.bonusDone + 1, total: 0 }
+  if (day.playMs < dailyCapMs(kid)) return { kind: 'bonus', core: false, index: day.bonusDone + 1, total: 0 }
   return null
 }
 
@@ -352,13 +368,13 @@ export function completeRound(kid: KidState, r: RoundDone, rng: Rng = Math.rando
   // Kid is never kept past 9 minutes for it.
   let earned: EarnEvents | null = null
   let chest: ChestReward | null = null
-  if (!day.earned && (day.coreDone >= day.plan.length || day.playMs >= DAILY_CAP_MS)) {
+  if (!day.earned && (day.coreDone >= day.plan.length || day.playMs >= dailyCapMs(kid))) {
     earned = earnPlayDay(kid.journey, r.date)
     day.earned = true
     if (earned) chest = openChest(kid, rng)
   }
   cutBatch(kid, r.date)
-  return { earned, chest, newBest, capReached: day.playMs >= DAILY_CAP_MS }
+  return { earned, chest, newBest, capReached: day.playMs >= dailyCapMs(kid) }
 }
 
 // ── Celebrations ─────────────────────────────────────────

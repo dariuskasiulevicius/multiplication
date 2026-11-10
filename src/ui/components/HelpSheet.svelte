@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { DEFAULT_DAILY_MINUTES } from '../../core/kid'
+  import { app } from '../../data/store.svelte'
   import { t } from '../../i18n/index.svelte'
   import MysteryBadgeIcon from './MysteryBadgeIcon.svelte'
 
@@ -13,7 +15,7 @@
       <button class="icon-btn" aria-label={t('close')} onclick={onclose}>✕</button>
     </div>
 
-    <section class="card">{t('helpMission')}</section>
+    <section class="card">{t('helpMission', { n: app.kid?.settings.dailyMinutes ?? DEFAULT_DAILY_MINUTES })}</section>
     <section class="card">{t('helpFire')}</section>
     <section class="card">{t('helpShield')}</section>
     <section class="card stack">

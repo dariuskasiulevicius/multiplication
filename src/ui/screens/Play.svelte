@@ -536,7 +536,7 @@
         {/if}
         <button class="btn ghost" onclick={() => (app.screen = 'home')}>{t('home')}</button>
       {:else}
-        {#if result.capReached}<p>{t('capReached')}</p>{/if}
+        {#if result.capReached}<p>{t('capReached', { n: kid.settings.dailyMinutes })}</p>{/if}
         <button class="btn big" onclick={() => (app.screen = 'home')}>{t('home')}</button>
       {/if}
     </section>
