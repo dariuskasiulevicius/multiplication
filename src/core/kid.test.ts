@@ -21,6 +21,8 @@ import {
   recordAnswer,
   roundSizeFor,
   setDailyMinutes,
+  setRecallBudget,
+  applySheetSettings,
   summarize,
   targetsFor,
   trialRetry,
@@ -404,5 +406,52 @@ describe('daily minutes', () => {
     expect(k.settings.dailyMinutes).toBe(3)
     setDailyMinutes(k, 60, D1)
     expect(k.settings.dailyMinutes).toBe(15)
+  })
+})
+
+describe('Parent Settings from the Family Sheet', () => {
+  const T1 = new Date('2026-11-10T08:00:00Z')
+  const T2 = '2026-11-10T09:00:00.000Z'
+
+  it('changes in the Parent Menu are stamped, clamped and rounded', () => {
+    const k = kid()
+    expect(k.settingsChangedAt).toBeNull()
+    setRecallBudget(k, 'recallBudgetMs', 3260, T1)
+    expect(k.settings.recallBudgetMs).toBe(3500)
+    expect(k.settingsChangedAt).toBe(T1.toISOString())
+    setRecallBudget(k, 'legendRecallBudgetMs', 60_000, T1)
+    expect(k.settings.legendRecallBudgetMs).toBe(15_000)
+    setDailyMinutes(k, 5, D1, T1)
+    expect(k.settings.dailyMinutes).toBe(5)
+  })
+
+  it('takes newer values from the sheet and resizes a day not started yet', () => {
+    const k = playedDays(10)
+    k.history = k.journey.playDays.slice(-3).map((d) => ({ ...summarize(k, d), minutes: 3, questions: 50 }))
+    setDailyMinutes(k, 9, D1, T1)
+    expect(ensureDay(k, D1).roundSize).toBe(35)
+    expect(applySheetSettings(k, { changedAt: T2, dailyMinutes: 5, recallBudgetMs: 4000 }, D1)).toBe(true)
+    expect(k.settings).toMatchObject({ dailyMinutes: 5, recallBudgetMs: 4000, legendRecallBudgetMs: 6000 })
+    expect(k.settingsChangedAt).toBe(T2)
+    expect(k.day!.roundSize).toBe(18)
+  })
+
+  it('keeps a later change made on the device', () => {
+    const k = kid()
+    setDailyMinutes(k, 7, D1, new Date('2026-11-10T10:00:00Z'))
+    expect(applySheetSettings(k, { changedAt: T2, dailyMinutes: 5 }, D1)).toBe(false)
+    expect(k.settings.dailyMinutes).toBe(7)
+  })
+
+  it('clamps sheet values and skips missing ones', () => {
+    const k = kid()
+    applySheetSettings(k, { changedAt: T2, dailyMinutes: 99, legendRecallBudgetMs: 200 }, D1)
+    expect(k.settings).toMatchObject({ dailyMinutes: 15, recallBudgetMs: 10_000, legendRecallBudgetMs: 1000 })
+  })
+
+  it('progress from before gets no timestamp, so the sheet wins its first change', () => {
+    const k = kid()
+    delete (k as Partial<KidState>).settingsChangedAt
+    expect(migrateKid(k).settingsChangedAt).toBeNull()
   })
 })

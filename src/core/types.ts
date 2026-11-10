@@ -57,6 +57,14 @@ export interface KidSettings {
   theme: ThemeId
 }
 
+/** Settings the Parent changes, in the Parent Menu or in the Family Sheet's Settings tab. */
+export type ParentSettings = Pick<KidSettings, 'dailyMinutes' | 'recallBudgetMs' | 'legendRecallBudgetMs'>
+
+/** Parent Settings changed in the Family Sheet, as a Sync reply carries them; a missing value stays as it is. */
+export interface SheetSettings extends Partial<ParentSettings> {
+  changedAt: string
+}
+
 export interface JourneyState {
   playDays: ISODate[]
   streak: number
@@ -142,6 +150,8 @@ export interface KidState {
   deviceId: string
   createdAt: string
   settings: KidSettings
+  /** When Parent Settings last changed, here or in the Family Sheet; the later change wins. */
+  settingsChangedAt: string | null
   facts: Record<FactId, FactState>
   calibration: Calibration
   journey: JourneyState

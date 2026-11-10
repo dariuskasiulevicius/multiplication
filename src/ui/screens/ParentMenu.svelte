@@ -1,7 +1,7 @@
 <script lang="ts">
   import { baseline } from '../../core/calibration'
   import { today } from '../../core/dates'
-  import { MAX_DAILY_MINUTES, MIN_DAILY_MINUTES, recentDays, setDailyMinutes } from '../../core/kid'
+  import { MAX_DAILY_MINUTES, MIN_DAILY_MINUTES, recentDays, setDailyMinutes, setRecallBudget } from '../../core/kid'
   import { countTiers, rankWeak } from '../../core/mastery'
   import type { KidState } from '../../core/types'
   import { app, deleteKid, saveKid, syncNow } from '../../data/store.svelte'
@@ -24,7 +24,7 @@
   }
 
   async function setBudget(field: 'recallBudgetMs' | 'legendRecallBudgetMs', secondsValue: number) {
-    kid.settings[field] = Math.round(secondsValue * 1000)
+    setRecallBudget(kid, field, secondsValue * 1000)
     await saveKid()
   }
 
