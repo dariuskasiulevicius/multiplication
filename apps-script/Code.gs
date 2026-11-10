@@ -24,11 +24,17 @@ var TABS = {
     name: 'Batches',
     header: ['Batch id', 'Kid id', 'Received'],
   },
+  settings: {
+    name: 'Settings',
+    header: ['Kid id', 'Kid', 'Daily minutes', 'Recall Budget (s)', 'Legend Recall Budget (s)', 'Changed'],
+  },
 };
 
 var SNAPSHOT_COL = 5;
 var CHUNK = 45000; // a cell holds at most 50 000 characters
 var DAY_KEY_COL = 15;
+var SETTINGS_WIDTH = 6; // Kid id, Kid, 3 values, Changed
+var CHANGED_COL = 6;
 
 var TIER_STYLE = {
   '': { text: '', color: '#f1f1f1' },
@@ -198,7 +204,77 @@ function sync_(req) {
   }
   if (req.snapshot) writeSnapshot_(state, row, req.snapshot);
   if (req.board) writeBoard_(req.kidName, req.board);
-  return { ok: true };
+  return { ok: true, settings: syncSettings_(req) };
+}
+
+/**
+ * Parent Settings live both on the device and in the Settings tab; the later
+ * change wins. Returns the tab's values when they changed after the device's.
+ */
+function syncSettings_(req) {
+  var s = req.settings;
+  if (!s) return null; // an app from before the Settings tab
+  var sheet = tab_(TABS.settings);
+  var deviceAt = s.changedAt ? new Date(s.changedAt).getTime() : 0;
+  var deviceRow = [
+    req.kidId,
+    req.kidName,
+    s.dailyMinutes,
+    s.recallBudgetMs / 1000,
+    s.legendRecallBudgetMs / 1000,
+    s.changedAt ? new Date(s.changedAt) : '',
+  ];
+  var row = findRow_(sheet, 1, req.kidId);
+  if (!row) {
+    sheet.appendRow(deviceRow);
+    sheet.getRange(sheet.getLastRow(), CHANGED_COL).setNumberFormat('yyyy-mm-dd hh:mm');
+    return null;
+  }
+  var v = sheet.getRange(row, 1, 1, SETTINGS_WIDTH).getValues()[0];
+  var sheetAt = v[CHANGED_COL - 1] instanceof Date ? v[CHANGED_COL - 1].getTime() : 0;
+  if (deviceAt > sheetAt) {
+    sheet.getRange(row, 1, 1, SETTINGS_WIDTH).setValues([deviceRow]);
+    return null;
+  }
+  // A blank or mistyped value is put back to the device's.
+  var minutes = number_(v[2]);
+  var budget = number_(v[3]);
+  var legend = number_(v[4]);
+  sheet.getRange(row, 2, 1, 4).setValues([[
+    req.kidName,
+    minutes === null ? deviceRow[2] : minutes,
+    budget === null ? deviceRow[3] : budget,
+    legend === null ? deviceRow[4] : legend,
+  ]]);
+  if (sheetAt <= deviceAt) return null;
+  var out = { changedAt: new Date(sheetAt).toISOString() };
+  if (minutes !== null) out.dailyMinutes = minutes;
+  if (budget !== null) out.recallBudgetMs = Math.round(budget * 1000);
+  if (legend !== null) out.legendRecallBudgetMs = Math.round(legend * 1000);
+  return out;
+}
+
+/** A cell as a number (a comma decimal is fine), or null. */
+function number_(value) {
+  var n = typeof value === 'number' ? value : parseFloat(String(value).replace(',', '.'));
+  return isFinite(n) ? n : null;
+}
+
+/**
+ * Simple trigger: a Parent's edit in the Settings tab stamps the row's
+ * Changed time, so the next Sync takes the new values to the Kid's device.
+ * Edits made by this script (Syncs) don't fire it.
+ */
+function onEdit(e) {
+  var range = e && e.range;
+  if (!range || range.getSheet().getName() !== TABS.settings.name) return;
+  if (range.getLastColumn() < 3 || range.getColumn() > 5) return;
+  var first = Math.max(2, range.getRow());
+  var last = range.getLastRow();
+  if (last < first) return;
+  var stamps = [];
+  for (var r = first; r <= last; r++) stamps.push([new Date()]);
+  range.getSheet().getRange(first, CHANGED_COL, stamps.length, 1).setValues(stamps).setNumberFormat('yyyy-mm-dd hh:mm');
 }
 
 function upsertDay_(sheet, req, d) {

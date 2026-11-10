@@ -22,7 +22,7 @@ Play it at **https://dariuskasiulevicius.github.io/multiplication/**
 3. Add each kid's name. You get a **setup link** and a QR code per kid.
 4. Open each link **on that kid's own device**. The kid picks a theme and the first day starts with a short quiz to find what they already know.
 
-On a kid's device, ⚙️ opens the kid's own settings (how to play, language, sound, adventure). The small **Settings for parents** link at the bottom leads, behind a grown-up maths question, to the Recall Budget, stats (including Stars and Speed Trial results), sync, restore and backups.
+On a kid's device, ⚙️ opens the kid's own settings (how to play, language, sound, adventure). The small **Settings for parents** link at the bottom leads, behind a grown-up maths question, to daily practice minutes, the Recall Budget, stats (including Stars and Speed Trial results), sync, restore and backups.
 
 **iPhone / iPad:** a game added to the home screen keeps its own storage, separate from Safari. The setup screen walks the kid through it: copy the setup link, add the game to the home screen, open it from there and tap **Paste setup link**.
 
@@ -49,12 +49,26 @@ The game creates these tabs:
 | `Board · <name>` | Each kid's 10 × 10 Sticker Board |
 | `State` | Full progress snapshot per kid, used to restore a device; also records the kid's active device |
 | `Batches` | Bookkeeping so retried uploads are not counted twice |
+| `Settings` | One row per kid: daily minutes, Recall Budget and Legend Recall Budget (seconds). Edit a value here and the kid's device takes it on its next sync |
 
 Good to know:
 
 - On first **Connect** the game stores a random secret in the script (**Project Settings → Script Properties → `SECRET`**). Requests without it are rejected. Connecting from a second parent device asks you to paste that secret.
 - Each kid has one active device. Opening a kid's setup link on a new device restores their progress there; the old device then offers "Play on this device" to move back.
-- After changing `Code.gs`, use **Deploy → Manage deployments → Edit → Version: New version**. This keeps the same URL, so setup links stay valid.
+- Settings can be changed in the `Settings` tab or in **Settings for parents** on the kid's device; the later change wins. A kid's row appears after that device's first sync with this script version. The device picks up a sheet change on its next sync (opening the app, the Home screen, after every round), and today's rounds are resized if none has been played yet. Allowed values: 3–15 minutes, 1–15 seconds; out-of-range values are clamped, and a blank or mistyped cell is put back to the device's value.
+
+### Updating the script
+
+When `apps-script/Code.gs` changes, copy the new version into your sheet's script and publish it as a **new version of the same deployment** (a *new deployment* would get a new URL and break the setup links):
+
+1. Open [`apps-script/Code.gs`](apps-script/Code.gs) on GitHub, click **Raw**, select all and copy.
+2. Open your Family Sheet → **Extensions → Apps Script**.
+3. In `Code.gs`, select all, delete, paste the new code and click **Save** (💾 or Ctrl/⌘ + S).
+4. Click **Deploy → Manage deployments**, pick your existing **Web app** deployment and click the ✏️ pencil (**Edit**).
+5. Under **Version** choose **New version**, optionally type a description, and click **Deploy**. If Google asks for access again, allow it (**Advanced → Go to … (unsafe)**, as during setup).
+6. Check that the **Web app URL** shown is the same as before (it ends with `/exec`). Nothing changes in the game or the setup links.
+
+Saving alone updates sheet triggers (like the `Settings` tab's edit stamp) but **not** the web app the game talks to; that only changes with step 5.
 
 ## Development
 

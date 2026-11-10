@@ -3,12 +3,14 @@
 // CORS request without a preflight, which Apps Script cannot answer.
 
 import { migrateKid } from '../core/kid'
-import type { Batch, KidState, SyncConfig, Tier } from '../core/types'
+import type { Batch, KidState, SheetSettings, SyncConfig, Tier } from '../core/types'
 
 export interface SheetResponse {
   ok: boolean
   error?: string
   snapshot?: string | null
+  /** Parent Settings changed in the sheet's Settings tab after this device last changed them. */
+  settings?: SheetSettings | null
 }
 
 const MAX_BATCHES = 20
@@ -104,8 +106,17 @@ export function fromSnapshot(json: string, local: Pick<KidState, 'deviceId' | 's
   }
 }
 
-/** Send waiting Batches plus a fresh snapshot. Returns the ids the sheet accepted. */
-export async function pushBatches(kid: KidState): Promise<{ sent: string[]; error?: string }> {
+export interface PushResult {
+  sent: string[]
+  settings?: SheetSettings
+  error?: string
+}
+
+/**
+ * Send waiting Batches, a fresh snapshot and the Parent Settings. Returns the
+ * ids the sheet accepted and any Parent Settings changed in the sheet since.
+ */
+export async function pushBatches(kid: KidState): Promise<PushResult> {
   if (!kid.sync) return { sent: [] }
   const batches: Batch[] = kid.pending.slice(0, MAX_BATCHES)
   const res = await post(kid.sync.url, {
@@ -117,7 +128,13 @@ export async function pushBatches(kid: KidState): Promise<{ sent: string[]; erro
     batches,
     snapshot: snapshotOf(kid),
     board: boardOf(kid),
+    settings: {
+      dailyMinutes: kid.settings.dailyMinutes,
+      recallBudgetMs: kid.settings.recallBudgetMs,
+      legendRecallBudgetMs: kid.settings.legendRecallBudgetMs,
+      changedAt: kid.settingsChangedAt,
+    },
   })
   if (!res.ok) return { sent: [], error: res.error ?? 'unknown' }
-  return { sent: batches.map((b) => b.id) }
+  return { sent: batches.map((b) => b.id), settings: res.settings ?? undefined }
 }

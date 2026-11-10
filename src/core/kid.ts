@@ -20,6 +20,7 @@ import type {
   Lang,
   Phase,
   RoundKind,
+  SheetSettings,
   SyncConfig,
   ThemeId,
   TrialResult,
@@ -28,6 +29,8 @@ import type {
 export const DEFAULT_DAILY_MINUTES = 9
 export const MIN_DAILY_MINUTES = 3
 export const MAX_DAILY_MINUTES = 15
+export const MIN_RECALL_BUDGET_MS = 1000
+export const MAX_RECALL_BUDGET_MS = 15_000
 export const DEFAULT_RECALL_BUDGET_MS = 10_000
 export const DEFAULT_LEGEND_RECALL_BUDGET_MS = 6000
 const HISTORY_DAYS = 120
@@ -61,6 +64,7 @@ export function createKid(o: NewKid): KidState {
       lang: o.lang,
       theme: o.theme,
     },
+    settingsChangedAt: null,
     facts: initialFacts(),
     calibration: emptyCalibration(),
     journey: newJourney(),
@@ -93,6 +97,7 @@ export function migrateKid(kid: KidState): KidState {
     kid.settings.legendRecallBudgetMs = DEFAULT_LEGEND_RECALL_BUDGET_MS
   }
   kid.settings.dailyMinutes ??= DEFAULT_DAILY_MINUTES
+  kid.settingsChangedAt ??= null
   kid.stars ??= 0
   kid.owned ??= []
   kid.look ??= {}
@@ -140,11 +145,44 @@ export function dailyCapMs(kid: KidState): number {
   return kid.settings.dailyMinutes * 60_000
 }
 
-/** Set the Kid's daily minutes; a day whose Rounds have not started yet is resized to fit. */
-export function setDailyMinutes(kid: KidState, minutes: number, date: ISODate): void {
-  kid.settings.dailyMinutes = Math.min(MAX_DAILY_MINUTES, Math.max(MIN_DAILY_MINUTES, Math.round(minutes)))
+const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n))
+
+/** Today's Rounds follow new daily minutes, unless one has been played already. */
+function resizeUnstartedDay(kid: KidState, date: ISODate): void {
   const day = kid.day?.date === date ? kid.day : null
   if (day && day.coreDone === 0 && day.bonusDone === 0) day.roundSize = roundSizeFor(kid, date, day.plan)
+}
+
+/** Set the Kid's daily minutes (3–15) from the Parent Menu. */
+export function setDailyMinutes(kid: KidState, minutes: number, date: ISODate, now = new Date()): void {
+  kid.settings.dailyMinutes = clamp(Math.round(minutes), MIN_DAILY_MINUTES, MAX_DAILY_MINUTES)
+  kid.settingsChangedAt = now.toISOString()
+  resizeUnstartedDay(kid, date)
+}
+
+/** Set a Recall Budget (1–15 s, half seconds) from the Parent Menu. */
+export function setRecallBudget(
+  kid: KidState,
+  field: 'recallBudgetMs' | 'legendRecallBudgetMs',
+  ms: number,
+  now = new Date(),
+): void {
+  kid.settings[field] = clamp(Math.round(ms / 500) * 500, MIN_RECALL_BUDGET_MS, MAX_RECALL_BUDGET_MS)
+  kid.settingsChangedAt = now.toISOString()
+}
+
+/** Take Parent Settings changed in the Family Sheet, unless this device changed them later. */
+export function applySheetSettings(kid: KidState, s: SheetSettings, date: ISODate): boolean {
+  if (kid.settingsChangedAt !== null && Date.parse(s.changedAt) <= Date.parse(kid.settingsChangedAt)) return false
+  const ok = (n: number | undefined): n is number => typeof n === 'number' && Number.isFinite(n)
+  if (ok(s.dailyMinutes)) kid.settings.dailyMinutes = clamp(Math.round(s.dailyMinutes), MIN_DAILY_MINUTES, MAX_DAILY_MINUTES)
+  for (const field of ['recallBudgetMs', 'legendRecallBudgetMs'] as const) {
+    const ms = s[field]
+    if (ok(ms)) kid.settings[field] = clamp(Math.round(ms / 500) * 500, MIN_RECALL_BUDGET_MS, MAX_RECALL_BUDGET_MS)
+  }
+  kid.settingsChangedAt = s.changedAt
+  resizeUnstartedDay(kid, date)
+  return true
 }
 
 /** Average play time per question over the last few Play Days before `date`, or null without any. */

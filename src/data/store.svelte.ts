@@ -1,5 +1,6 @@
 import { del, get, set } from 'idb-keyval'
-import { migrateKid } from '../core/kid'
+import { today } from '../core/dates'
+import { applySheetSettings, migrateKid } from '../core/kid'
 import { uid } from '../core/rng'
 import type { KidState } from '../core/types'
 import type { SetupPayload } from '../core/setupLink'
@@ -88,13 +89,14 @@ export async function syncNow(): Promise<void> {
   try {
     // A Sync sends at most 20 Batches; keep going until the backlog is empty.
     for (let i = 0; i < 10; i++) {
-      const { sent, error } = await pushBatches($state.snapshot(kid) as KidState)
+      const { sent, settings, error } = await pushBatches($state.snapshot(kid) as KidState)
       if (error) {
         app.syncError = error
         if (error === 'inactive_device') kid.inactive = true
         break
       }
       app.syncError = null
+      if (settings) applySheetSettings(kid, settings, today())
       kid.pending = kid.pending.filter((b) => !sent.includes(b.id))
       kid.lastSyncAt = new Date().toISOString()
       if (kid.pending.length === 0) break
