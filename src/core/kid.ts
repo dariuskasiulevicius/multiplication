@@ -5,7 +5,7 @@ import { addTap, baseline, emptyCalibration, median } from './calibration'
 import { openChest } from './cosmetics'
 import { digits, factId, inFamily, initialFacts, lessonFacts, type Lesson } from './facts'
 import { earnPlayDay, isWorldEnd, newJourney, phaseOf, worldOf, worldRange, type EarnEvents } from './journey'
-import { applyAnswer, countTiers, introduce, type AnswerOutcome } from './mastery'
+import { applyAnswer, countTiers, introduce, isGuess, type AnswerOutcome } from './mastery'
 import { uid, type Rng } from './rng'
 import type {
   AnswerRow,
@@ -115,8 +115,12 @@ function corePlan(kid: KidState, date: ISODate): RoundKind[] {
       return Object.values(kid.facts).some((f) => f.introduced)
         ? ['review', 'new', 'mixed', 'speed', 'weak']
         : ['new', 'review', 'mixed', 'speed', 'weak']
-    case 'legend':
-      return trial ? ['weak', 'trial'] : ['weak', 'speed', 'mixed']
+    case 'legend': {
+      const plan: RoundKind[] = trial ? ['weak', 'trial'] : ['weak', 'speed', 'mixed']
+      // Facts still not Introduced keep getting their New Facts round.
+      if (Object.values(kid.facts).some((f) => !f.introduced)) plan.splice(1, 0, 'new')
+      return plan
+    }
     case 'free':
       return ['mixed', 'speed']
   }
@@ -161,6 +165,18 @@ export function recentDays(kid: KidState, date: ISODate): ISODate[] {
   return [...kid.journey.playDays.slice(-3), date]
 }
 
+/** Share of answers missed over the recent days, 0–1; Guesses are not answers. */
+export function recentMissRate(kid: KidState, date: ISODate): number {
+  let questions = 0
+  let correct = 0
+  for (const d of new Set(recentDays(kid, date))) {
+    const day = kid.day?.date === d ? kid.day : kid.history.find((h) => h.date === d)
+    questions += day?.questions ?? 0
+    correct += day?.correct ?? 0
+  }
+  return questions > 0 ? (questions - correct) / questions : 0
+}
+
 export function recordTap(kid: KidState, digitCount: number, ms: number): void {
   addTap(kid.calibration, digitCount, ms)
 }
@@ -175,12 +191,23 @@ export interface AnswerInput {
   now: Date
 }
 
-export function recordAnswer(kid: KidState, input: AnswerInput): { outcome: AnswerOutcome; targets: Targets } {
+export interface Recorded {
+  outcome: AnswerOutcome
+  targets: Targets
+  /** A Guess counts for nothing: no miss, no stats, no answer row. */
+  guess: boolean
+}
+
+export function recordAnswer(kid: KidState, input: AnswerInput): Recorded {
   const day = ensureDay(kid, input.date)
   const answer = input.a * input.b
   const targets = targetsFor(kid, input.date, answer)
   const correct = input.given === answer
   const fact = kid.facts[factId(input.a, input.b)]
+  if (isGuess(input.given, answer)) {
+    const outcome = { correct: false, fast: false, legendFast: false, tierBefore: fact.tier, tierAfter: fact.tier }
+    return { outcome, targets, guess: true }
+  }
   const outcome = applyAnswer(fact, {
     correct,
     ms: input.ms,
@@ -213,7 +240,7 @@ export function recordAnswer(kid: KidState, input: AnswerInput): { outcome: Answ
     round: input.round,
   }
   kid.outbox.push(row)
-  return { outcome, targets }
+  return { outcome, targets, guess: false }
 }
 
 /** Introduce a lesson's Facts when its New Facts round starts. */

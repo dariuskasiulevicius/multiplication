@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { initialFacts, newFact } from './facts'
-import { applyAnswer, introduce, isDue, nextStep, rankWeak } from './mastery'
+import { applyAnswer, introduce, isDue, isGuess, nextStep, rankWeak } from './mastery'
 
 const fast = (date: string) => ({ correct: true, ms: 2000, targetMs: 5000, legendTargetMs: 1500, date })
 const blazing = (date: string) => ({ correct: true, ms: 1000, targetMs: 5000, legendTargetMs: 1500, date })
@@ -93,5 +93,18 @@ describe('mastery', () => {
     expect(nextStep(f)).toEqual({ next: 'diamond', days: 3 })
     for (const d of ['2026-10-04', '2026-10-05', '2026-10-06']) applyAnswer(f, blazing(d))
     expect(nextStep(f)).toEqual({ next: 'max', days: 0 })
+  })
+})
+
+describe('isGuess', () => {
+  it('a repeated digit that is not the answer is a Guess', () => {
+    expect([88, 55, 22, 11, 99, 111].every((n) => isGuess(n, 42))).toBe(true)
+  })
+
+  it('real attempts are not Guesses', () => {
+    expect(isGuess(48, 42)).toBe(false)
+    expect(isGuess(8, 6)).toBe(false)
+    expect(isGuess(null, 42)).toBe(false)
+    expect(isGuess(100, 100)).toBe(false)
   })
 })

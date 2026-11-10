@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { factId, initialFacts, lessonFacts, LESSONS } from './facts'
 import { introduce } from './mastery'
 import { seeded } from './rng'
-import { buildRound, choiceOptions, ROUND_SIZE, RoundRunner, TRIAL_SIZE, type RoundItem } from './rounds'
+import { buildRound, choiceOptions, ROUND_SIZE, RoundRunner, SMALL_LESSON_ABOVE, TRIAL_SIZE, type RoundItem } from './rounds'
 
 const ctx = (facts = initialFacts(), seed = 1) => ({ facts, date: '2026-10-05', recentDays: ['2026-10-05'], rng: seeded(seed) })
 
@@ -56,13 +56,41 @@ describe('buildRound', () => {
     expect(ids(buildRound('review', ctx(facts)).items)).toContain('6x7')
   })
 
-  it('consolidates instead of adding new Facts after many recent misses', () => {
+  it('keeps teaching new Facts after many recent misses', () => {
     const facts = initialFacts()
-    for (const id of lessonFacts(LESSONS[0])) {
-      introduce(facts[id], '2026-10-01')
-      facts[id].lastWrong = '2026-10-05'
+    for (const l of LESSONS.slice(0, 2)) {
+      for (const id of lessonFacts(l)) {
+        introduce(facts[id], '2026-10-01')
+        facts[id].lastWrong = '2026-10-05'
+      }
     }
-    expect(buildRound('new', ctx(facts)).kind).toBe('weak')
+    const r = buildRound('new', ctx(facts))
+    expect(r.kind).toBe('new')
+    expect(r.lesson).toBe(LESSONS[2])
+  })
+
+  it('teaches one Fact Pair when more than 15% of recent answers were missed', () => {
+    const facts = initialFacts()
+    for (const l of LESSONS.slice(0, 2)) for (const id of lessonFacts(l)) introduce(facts[id], '2026-10-01')
+    expect(buildRound('new', { ...ctx(facts), recentMissRate: SMALL_LESSON_ABOVE }).lesson).toBe(LESSONS[2])
+
+    const r = buildRound('new', { ...ctx(facts), recentMissRate: 0.2 })
+    expect(r.lesson?.pairs).toEqual([LESSONS[2].pairs[0]])
+    expect(r.items.filter((i) => i.type === 'intro')).toHaveLength(1)
+    expect(ids(r.items)).toHaveLength(ROUND_SIZE)
+  })
+
+  it('the one Fact Pair is the first still to teach', () => {
+    const facts = initialFacts()
+    for (const l of LESSONS.slice(0, 2)) for (const id of lessonFacts(l)) introduce(facts[id], '2026-10-01')
+    const [first, second] = LESSONS[2].pairs
+    introduce(facts[factId(first.a, first.b)], '2026-10-01')
+    introduce(facts[factId(first.b, first.a)], '2026-10-01')
+    expect(buildRound('new', { ...ctx(facts), recentMissRate: 0.5 }).lesson?.pairs).toEqual([second])
+  })
+
+  it('a rule lesson stays whole even after many misses', () => {
+    expect(buildRound('new', { ...ctx(), recentMissRate: 0.5 }).lesson).toBe(LESSONS[0])
   })
 })
 

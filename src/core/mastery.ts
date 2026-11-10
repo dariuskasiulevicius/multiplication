@@ -37,6 +37,13 @@ export interface AnswerOutcome {
   tierAfter: Tier
 }
 
+/** A Guess: one digit repeated (11, 22 … 99, 111), never a real product, so it says nothing about the Fact. */
+export function isGuess(given: number | null, answer: number): boolean {
+  if (given === null || given < 11 || given === answer) return false
+  const s = String(given)
+  return [...s].every((c) => c === s[0])
+}
+
 function addDay(days: ISODate[], date: ISODate): void {
   if (days.length < DAYS_FOR_GOLD && !days.includes(date)) days.push(date)
 }

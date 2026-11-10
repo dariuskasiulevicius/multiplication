@@ -5,6 +5,7 @@ import {
   completeRound,
   createKid,
   DAILY_CAP_MS,
+  ensureDay,
   finishPlacement,
   finishTrial,
   introduceLesson,
@@ -15,7 +16,9 @@ import {
   nextRound,
   pendingReveal,
   playDayNumber,
+  recentMissRate,
   recordAnswer,
+  summarize,
   targetsFor,
   trialRetry,
   trialStars,
@@ -141,6 +144,7 @@ describe('Speed Trials', () => {
     expect(nextRound(k, D1)).toMatchObject({ kind: 'review', total: 4 })
     expect(trialWorldFor(k, D1)).toBe(1)
     const l = playedDays(63)
+    for (const f of Object.values(l.facts)) f.introduced = true
     expect(nextRound(l, D1)).toMatchObject({ kind: 'weak', total: 2 })
     expect(trialWorldFor(l, D1)).toBe(8)
     expect(nextRound(playedDays(5), D1)?.total).toBe(5)
@@ -257,5 +261,43 @@ describe('celebrations', () => {
     k.facts['3x2'].tier = 'diamond'
     k.trials = { 1: { stars: 3, fast: 20, total: 20, tries: 1 }, 2: { stars: 2, fast: 16, total: 20, tries: 1 } }
     expect(journeyStats(k)).toMatchObject({ playDays: 49, gold: 2, diamond: 1, trialStars: 5 })
+  })
+})
+
+describe('New Facts every day', () => {
+  it('Legend keeps a New Facts round while some Facts are not Introduced', () => {
+    const k = playedDays(50)
+    expect(nextRound(k, D1)).toMatchObject({ kind: 'weak', total: 4 })
+    for (const f of Object.values(k.facts)) f.introduced = true
+    expect(nextRound(k, D1)).toMatchObject({ kind: 'weak', total: 3 })
+  })
+
+  it("a Legend World's last Play Day also gets it", () => {
+    const k = playedDays(63)
+    expect(ensureDay(k, D1).plan).toEqual(['weak', 'new', 'trial'])
+  })
+
+  it('the recent miss rate covers the last 3 Play Days and today', () => {
+    const k = playedDays(4)
+    const [old, ...recent] = k.journey.playDays
+    const day = (date: string, questions: number, correct: number) => ({ ...summarize(k, date), questions, correct })
+    k.history = [day(old, 10, 0), ...recent.map((d) => day(d, 20, 18))]
+    expect(recentMissRate(k, D1)).toBeCloseTo(6 / 60)
+    recordAnswer(k, { a: 2, b: 3, given: 5, ms: 1500, round: 'review', date: D1, now })
+    expect(recentMissRate(k, D1)).toBeCloseTo(7 / 61)
+  })
+
+  it('a Guess is not counted: no miss, no stats, no answer row', () => {
+    const k = kid()
+    introduceLesson(k, LESSONS[2], D1)
+    const before = structuredClone(k.facts['2x5'])
+    const r = recordAnswer(k, { a: 2, b: 5, given: 88, ms: 900, round: 'new', date: D1, now })
+    expect(r.guess).toBe(true)
+    expect(r.outcome.correct).toBe(false)
+    expect(k.facts['2x5']).toEqual(before)
+    expect(k.day).toMatchObject({ questions: 0, correct: 0 })
+    expect(k.outbox).toEqual([])
+    expect(recordAnswer(k, { a: 2, b: 5, given: 12, ms: 900, round: 'new', date: D1, now }).guess).toBe(false)
+    expect(k.facts['2x5']).toMatchObject({ wrong: 1, lastWrong: D1 })
   })
 })

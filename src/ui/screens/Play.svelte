@@ -11,6 +11,7 @@
     introduceLesson,
     nextRound,
     recentDays,
+    recentMissRate,
     recordAnswer,
     recordTap,
     targetsFor,
@@ -21,7 +22,7 @@
     type RoundResult,
     type TrialOutcome,
   } from '../../core/kid'
-  import { tierRank } from '../../core/mastery'
+  import { tierRank, type AnswerOutcome } from '../../core/mastery'
   import { Placement } from '../../core/placement'
   import { pick } from '../../core/rng'
   import { buildRound, choiceOptions, RoundRunner, type RoundItem } from '../../core/rounds'
@@ -33,7 +34,6 @@
   import DotGrid from '../components/DotGrid.svelte'
   import MysteryChest from '../components/MysteryChest.svelte'
   import Numpad from '../components/Numpad.svelte'
-  import SpeedBar from '../components/SpeedBar.svelte'
   import WorldCelebration from '../components/WorldCelebration.svelte'
   import { starText } from '../stars'
 
@@ -45,6 +45,8 @@
   const date = today()
   const IDLE_CAP_MS = 45_000
   const HINT_AFTER = 2 // × Target Time
+  /** Wrong Tries in a row before the answer is shown. */
+  const MAX_TRIES = 3
 
   let stage = $state<Stage>('warmup')
   let input = $state('')
@@ -63,11 +65,11 @@
   let placement: Placement | null = null
   let item = $state<RoundItem | null>(null)
   let progress = $state(0)
-  let questionNo = $state(0)
   let target = $state(5000)
   let feedback = $state<Feedback>(null)
   let feedbackText = $state('')
   let fixing = $state(false)
+  let tries = $state(0)
   let showHint = $state(false)
   let options = $state<number[]>([])
   let chosen = $state<number | null>(null)
@@ -82,6 +84,8 @@
 
   // Timing (not reactive)
   let shownAt = 0
+  /** The current question already has its one counted Try. */
+  let scored = false
   let lastTick = 0
   let activeMs = 0
   let answerMs = 0
@@ -192,6 +196,7 @@
         facts: kid.facts,
         date,
         recentDays: recentDays(kid, date),
+        recentMissRate: recentMissRate(kid, date),
         rng: Math.random,
         worldFacts: trialWorld !== null ? worldFacts(kid, trialWorld) : undefined,
       })
@@ -221,6 +226,8 @@
     clearTimeout(hintTimer)
     input = ''
     fixing = false
+    tries = 0
+    scored = false
     showHint = false
     feedback = null
     chosen = null
@@ -233,7 +240,6 @@
     if (item.type === 'intro') options = choiceOptions(item.a, item.b, Math.random)
     if (item.type === 'typed') {
       target = targetsFor(kid, date, item.a * item.b).targetMs
-      questionNo++
       shownAt = performance.now()
       hintTimer = setTimeout(() => (showHint = true), target * HINT_AFTER)
     }
@@ -278,48 +284,64 @@
       return
     }
 
-    const ms = performance.now() - shownAt
-    clearTimeout(hintTimer)
-    answerMs += ms
-    const { outcome } = recordAnswer(kid, { a, b, given, ms, round: kind, date, now: new Date() })
-    void saveKid()
-
-    if (tierRank(outcome.tierAfter) > tierRank(outcome.tierBefore) && tierRank(outcome.tierAfter) >= tierRank('silver')) {
-      const medal = { silver: '🥈', gold: '🥇', diamond: '💎' }[outcome.tierAfter as 'silver' | 'gold' | 'diamond']
-      showToast(`${medal} ${a} × ${b} = ${answer}`)
-      if (tierRank(outcome.tierBefore) < tierRank('gold') && tierRank(outcome.tierAfter) >= tierRank('gold')) newGold++
+    // Only the first Try that isn't a Guess counts toward the Fact.
+    let counted: AnswerOutcome | null = null
+    if (!scored) {
+      const ms = performance.now() - shownAt
+      const { outcome, guess } = recordAnswer(kid, { a, b, given, ms, round: kind, date, now: new Date() })
+      if (!guess) {
+        scored = true
+        counted = outcome
+        answerMs += ms
+        void saveKid()
+        if (tierRank(outcome.tierAfter) > tierRank(outcome.tierBefore) && tierRank(outcome.tierAfter) >= tierRank('silver')) {
+          const medal = { silver: '🥈', gold: '🥇', diamond: '💎' }[outcome.tierAfter as 'silver' | 'gold' | 'diamond']
+          showToast(`${medal} ${a} × ${b} = ${answer}`)
+          if (tierRank(outcome.tierBefore) < tierRank('gold') && tierRank(outcome.tierAfter) >= tierRank('gold')) newGold++
+        }
+      }
     }
+    const correct = given === answer
 
     if (placement) {
-      placement.submit(outcome.correct)
-      if (outcome.correct) stats.fast += outcome.fast ? 1 : 0
+      clearTimeout(hintTimer)
+      placement.submit(correct)
+      if (counted?.fast) stats.fast++
       feedback = 'neutral'
       sfx.tap()
       setTimeout(present, 250)
       return
     }
 
-    if (outcome.correct) {
-      combo = outcome.fast ? combo + 1 : 0
-      feedback = outcome.fast ? 'fast' : 'right'
-      feedbackText = outcome.fast
+    if (correct) {
+      clearTimeout(hintTimer)
+      // Right after a wrong Try still counts as a miss: no speed credit.
+      const fast = counted?.fast ?? false
+      combo = fast ? combo + 1 : 0
+      feedback = fast ? 'fast' : 'right'
+      feedbackText = fast
         ? combo >= 3
           ? `🔥 ${t('combo', { n: combo })}`
           : `⚡ ${pick(theme.cheers[i18n.lang], Math.random)}`
         : `✓ ${t('correct')}`
-      if (outcome.fast && combo >= 3) sfx.combo(combo)
-      else if (outcome.fast) sfx.fast()
+      if (fast && combo >= 3) sfx.combo(combo)
+      else if (fast) sfx.fast()
       else sfx.correct()
-      runner?.answer({ correct: true, fast: outcome.fast })
-      setTimeout(present, outcome.fast ? 450 : 650)
+      runner?.answer({ correct: counted !== null, fast })
+      setTimeout(present, fast ? 450 : 650)
     } else {
       combo = 0
-      feedback = 'wrong'
-      fixing = true
+      tries++
       input = ''
       shakes++
       sfx.wrong()
       vibrate(120)
+      // The answer shows only after the third wrong Try in a row.
+      if (tries >= MAX_TRIES) {
+        clearTimeout(hintTimer)
+        feedback = 'wrong'
+        fixing = true
+      }
     }
   }
 
@@ -435,7 +457,7 @@
     <section class="stage center stack">
       <p class="muted small">{kind === 'placement' ? t('placementProgress') : roundTitle}</p>
       {#key shakes}
-        <p class="question {feedback ?? ''}" class:shake={feedback === 'wrong' || (fixing && shakes > 0)}>
+        <p class="question {feedback ?? ''}" class:shake={feedback === 'wrong' || ((fixing || tries > 0) && shakes > 0)}>
           {item.a} × {item.b} = <span class="answer">{input || (fixing ? '' : '?')}</span>
         </p>
       {/key}
@@ -445,7 +467,9 @@
       {:else if feedback === 'fast' || feedback === 'right'}
         <p class="cheer pop">{feedbackText}</p>
       {:else}
-        <SpeedBar targetMs={target} id={questionNo} />
+        {#if tries > 0}
+          {#key tries}<p class="retry pop">{t('tryAgain')}</p>{/key}
+        {/if}
         {#if showHint && kind !== 'placement'}<div class="hint"><DotGrid a={item.a} b={item.b} size={10} /></div>{/if}
       {/if}
     </section>
@@ -637,6 +661,11 @@
   .fix {
     font-size: 1.2rem;
     font-weight: 800;
+    color: var(--gold);
+  }
+  .retry {
+    font-size: 1.3rem;
+    font-weight: 900;
     color: var(--gold);
   }
   .cheer {

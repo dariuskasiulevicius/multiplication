@@ -1,12 +1,12 @@
-import { factId, lessonFacts, nextLesson, parseFactId, type Lesson } from './facts'
+import { factId, lessonFacts, nextLesson, pairFacts, parseFactId, type Lesson } from './facts'
 import { isDue, rankWeak } from './mastery'
 import { shuffle, type Rng } from './rng'
 import type { FactId, FactState, ISODate, RoundKind } from './types'
 
 export const ROUND_SIZE = 10
 export const TRIAL_SIZE = 20
-/** Recent misses above this skip new Facts for a day of consolidation. */
-const CONSOLIDATE_AT = 6
+/** A recent miss rate above this teaches one Fact Pair instead of the whole lesson. */
+export const SMALL_LESSON_ABOVE = 0.15
 
 export type RoundItem =
   | { type: 'rule'; family: number }
@@ -25,6 +25,8 @@ export interface BuildContext {
   date: ISODate
   /** Last few Play Days plus today, for "recent miss" checks. */
   recentDays: ISODate[]
+  /** Share of answers missed over `recentDays`, 0–1. */
+  recentMissRate?: number
   rng: Rng
   /** Facts Introduced in the World of a Speed Trial. */
   worldFacts?: FactId[]
@@ -70,9 +72,11 @@ function spread(ids: FactId[]): FactId[] {
   return out
 }
 
-function recentMisses(ctx: BuildContext): number {
-  const recent = new Set(ctx.recentDays)
-  return Object.values(ctx.facts).filter((f) => f.introduced && f.lastWrong && recent.has(f.lastWrong)).length
+/** Only the lesson's first Fact Pair still to teach; a rule lesson stays whole, as one rule teaches it. */
+function firstPair(lesson: Lesson, facts: Record<FactId, FactState>): Lesson {
+  if (lesson.rule !== null) return lesson
+  const pair = lesson.pairs.find((p) => pairFacts(p.a, p.b).some((id) => !facts[id].introduced))
+  return pair ? { rule: null, pairs: [pair] } : lesson
 }
 
 export function buildRound(kind: RoundKind, ctx: BuildContext): BuiltRound {
@@ -82,10 +86,11 @@ export function buildRound(kind: RoundKind, ctx: BuildContext): BuiltRound {
 
   switch (kind) {
     case 'new': {
+      // New Facts come every day; after many recent misses just fewer of them.
       const lesson = nextLesson(ctx.facts)
       if (!lesson) return buildRound('mixed', ctx)
-      if (all.length > 0 && recentMisses(ctx) >= CONSOLIDATE_AT) return buildRound('weak', ctx)
-      return newFactsRound(lesson, ctx, weak)
+      const small = (ctx.recentMissRate ?? 0) > SMALL_LESSON_ABOVE
+      return newFactsRound(small ? firstPair(lesson, ctx.facts) : lesson, ctx, weak)
     }
     case 'review': {
       const due = shuffle(
