@@ -50,6 +50,8 @@ export interface Calibration {
 export interface KidSettings {
   recallBudgetMs: number
   legendRecallBudgetMs: number
+  /** Minutes of practice a day: sizes the Rounds and is the Daily Cap. */
+  dailyMinutes: number
   sound: boolean
   lang: Lang
   theme: ThemeId

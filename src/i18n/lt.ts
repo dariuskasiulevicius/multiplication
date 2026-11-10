@@ -127,7 +127,11 @@ export const lt: Dict = {
     other: 'Jau moki {n} pavyzdžių!',
   },
   placementZero: 'Puiki pradžia! Mokykimės kartu.',
-  capReached: 'Jau 9 minutės — puikiai padirbėjai! Pailsink galvą iki rytojaus.',
+  capReached: {
+    one: 'Jau {n} minutė — puikiai padirbėjai! Pailsink galvą iki rytojaus.',
+    few: 'Jau {n} minutės — puikiai padirbėjai! Pailsink galvą iki rytojaus.',
+    other: 'Jau {n} minučių — puikiai padirbėjai! Pailsink galvą iki rytojaus.',
+  },
   mysteryBadge: 'Paslaptingas ženklelis — sužinosi, kas tai, kai pasieksi žaidimo dieną {n}!',
   mysteryBadgeLabel: 'Paslaptingas ženklelis',
   tapToOpen: 'Paspausk ir atidaryk!',
@@ -201,7 +205,7 @@ export const lt: Dict = {
   // Help for kids
   helpButton: 'Kaip žaisti?',
   helpTitle: 'Kaip žaisti',
-  helpMission: '▶ Kasdien spausk didelį mygtuką ir žaisk savo misiją: apie 5 raundus, apie 9 minutes. Tada sugrįžk rytoj!',
+  helpMission: '▶ Kasdien spausk didelį mygtuką ir žaisk savo misiją: apie 5 raundus, apie {n} min. Tada sugrįžk rytoj!',
   helpFire: '🔥 Ugnis = kiek dienų iš eilės žaidei. Žaisk kasdien, kad ji degtų! Praleisi dieną — ji užges, nebent ją išgelbės skydas.',
   helpShield: '🛡️ Skydas išgelbės tavo ugnį, jei praleisi dieną. Jis veikia pats. Naują skydą gausi, kai įveiksi pasaulį (gali turėti 2).',
   helpMedals: 'Kiekvienas pavyzdys tavo lipdukų lentoje gali laimėti medalį:',
@@ -255,6 +259,10 @@ export const lt: Dict = {
   parentMenu: 'Tėvų meniu',
   language: 'Kalba',
   sound: 'Garsas',
+  dailyMinutes: 'Kasdienė treniruotė',
+  minutesValue: '{n} min.',
+  dailyMinutesHelp:
+    'Maždaug kiek laiko vaikas ({name}) treniruojasi kasdien. Raundai pritaikomi prie šio laiko pagal pastarųjų dienų tempą, o pasiekus ribą tos dienos žaidimas baigiasi. Pakeitimas pritaiko šiandienos raundus, jei dar nė vienas nepradėtas, kitaip – nuo rytojaus.',
   budget: 'Atsiminimo laikas',
   legendBudget: 'Atsiminimo laikas (Legenda)',
   budgetHelp: 'Sekundės, pridedamos prie vaiko ({name}) rašymo greičio; atsakymai per tą laiką laikomi greitais.',

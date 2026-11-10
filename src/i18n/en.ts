@@ -124,7 +124,10 @@ export const en = {
     other: 'You already know {n} facts!',
   },
   placementZero: "Great start! Let's learn together.",
-  capReached: "That's 9 minutes — great work! Rest your brain until tomorrow.",
+  capReached: {
+    one: "That's {n} minute — great work! Rest your brain until tomorrow.",
+    other: "That's {n} minutes — great work! Rest your brain until tomorrow.",
+  },
   mysteryBadge: 'Mystery badge — reach Play Day {n} to find out what it is!',
   mysteryBadgeLabel: 'Mystery badge',
   tapToOpen: 'Tap to open!',
@@ -201,7 +204,7 @@ export const en = {
   // Help for kids
   helpButton: 'How to play?',
   helpTitle: 'How to play',
-  helpMission: '▶ Every day, press the big button and play your mission: about 5 rounds, about 9 minutes. Then come back tomorrow!',
+  helpMission: '▶ Every day, press the big button and play your mission: about 5 rounds, about {n} minutes. Then come back tomorrow!',
   helpFire: '🔥 Fire = how many days in a row you played. Play every day to keep it burning! Miss a day and it goes out — unless a Shield saves it.',
   helpShield: '🛡️ A Shield saves your fire if you miss a day. It works by itself. You get a new Shield when you finish a world (you can hold 2).',
   helpMedals: 'Every fact on your Sticker board can win a medal:',
@@ -251,6 +254,10 @@ export const en = {
   parentMenu: 'Parent menu',
   language: 'Language',
   sound: 'Sound',
+  dailyMinutes: 'Daily practice',
+  minutesValue: '{n} min',
+  dailyMinutesHelp:
+    "About how long {name} practises each day. Rounds are sized to fit it at {name}'s recent pace, and play stops at this limit. Changes resize today's rounds if none has started yet, otherwise from tomorrow.",
   budget: 'Recall Budget',
   legendBudget: 'Legend Recall Budget',
   budgetHelp: "Seconds added to {name}'s typing speed; answers within that time count as fast.",

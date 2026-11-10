@@ -105,7 +105,7 @@ The fixed set of Rounds (about 5 normally, 3 in Legend) that must be finished to
 An optional Round played after Core Rounds, allowed until the Daily Cap.
 
 **Daily Cap**:
-9 minutes of play per calendar day, summed over all Sessions; reaching it ends the day's play and earns the Play Day even if Core Rounds are unfinished.
+The Kid's daily minutes of play per calendar day — 9 by default, set per Kid by the Parent between 3 and 15 — summed over all Sessions; reaching it ends the day's play and earns the Play Day even if Core Rounds are unfinished. The **Round Size** is set to fill it.
 
 **Session**:
 One continuous sitting in the app, from opening to leaving; a Play Day's Core Rounds may be spread over several Sessions on the same calendar day.
@@ -231,4 +231,4 @@ The settings area on a Kid's device, behind an adult gate.
 - A slow Kid could need more than 9 minutes for all **Core Rounds** — resolved: reaching the **Daily Cap** also earns the **Play Day**, so the daily time promise always holds.
 - New Facts **Rounds** used to turn into **Weak Fact** Rounds after 6 misses in the last 3 **Play Days** — resolved: at a usual ~8% miss rate on ~50 answers a day that threshold was always reached, so one Kid got no New Facts for three weeks. New Facts now come every Play Day; many recent misses only make the lesson smaller.
 - A draining speed bar showed **Target Time** during each question — resolved: removed, as it pushed Kids into fast **Guesses**; speed is still judged, just not shown.
-- Core Rounds were 10 questions each, about 3 minutes a day for a quick Kid — resolved: the **Round Size** grows with the Kid's pace so a day is about 9 minutes, in Legend too (fewer, longer Rounds).
+- Core Rounds were 10 questions each, about 3 minutes a day for a quick Kid — resolved: the **Round Size** grows with the Kid's pace so a day fills about the **Daily Cap**, in Legend too (fewer, longer Rounds); the Parent sets the daily minutes per Kid, since a Kid who has nearly every Fact needs less.

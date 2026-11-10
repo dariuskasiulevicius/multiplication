@@ -4,7 +4,7 @@ import {
   ceremonyFor,
   completeRound,
   createKid,
-  DAILY_CAP_MS,
+  dailyCapMs,
   ensureDay,
   finishPlacement,
   finishTrial,
@@ -20,6 +20,7 @@ import {
   msPerQuestion,
   recordAnswer,
   roundSizeFor,
+  setDailyMinutes,
   summarize,
   targetsFor,
   trialRetry,
@@ -76,7 +77,7 @@ describe('a Play Day', () => {
   it('reaching the Daily Cap earns the Play Day and then stops Bonus Rounds', () => {
     const k = kid()
     finishPlacement(k, [], D1)
-    const r = round(k, 'placement', true, DAILY_CAP_MS)
+    const r = round(k, 'placement', true, dailyCapMs(k))
     expect(r.earned).not.toBeNull()
     expect(r.capReached).toBe(true)
     expect(nextRound(k, D1)).toBeNull()
@@ -355,5 +356,53 @@ describe('Round Size', () => {
     ensureDay(k, D1)
     delete (k.day as Partial<NonNullable<KidState['day']>>).roundSize
     expect(migrateKid(k).day!.roundSize).toBe(10)
+  })
+})
+
+describe('daily minutes', () => {
+  const PLAN = ['review', 'new', 'mixed', 'speed', 'weak'] as const
+  function paced(minutes: number, questions: number): KidState {
+    const k = playedDays(10)
+    k.history = k.journey.playDays.slice(-3).map((d) => ({ ...summarize(k, d), minutes, questions }))
+    return k
+  }
+
+  it('a new Kid practises 9 minutes a day; older progress gets the same', () => {
+    expect(kid().settings.dailyMinutes).toBe(9)
+    const k = kid()
+    delete (k.settings as Partial<KidState['settings']>).dailyMinutes
+    expect(migrateKid(k).settings.dailyMinutes).toBe(9)
+  })
+
+  it('sizes the Rounds to fit', () => {
+    const k = paced(3, 50)
+    k.settings.dailyMinutes = 5
+    // 300 s / 3.6 s = 83 questions; the Speed Round keeps 10, the other four share the rest.
+    expect(roundSizeFor(k, D1, [...PLAN])).toBe(18)
+  })
+
+  it('is the Daily Cap', () => {
+    const k = kid()
+    k.settings.dailyMinutes = 5
+    finishPlacement(k, [], D1)
+    expect(round(k, 'placement', true, 4 * 60_000).capReached).toBe(false)
+    const r = round(k, 'new', true, 60_000)
+    expect(r.earned).not.toBeNull()
+    expect(r.capReached).toBe(true)
+    expect(nextRound(k, D1)).toBeNull()
+  })
+
+  it('changing it resizes today until a Round is played, and stays 3–15', () => {
+    const k = paced(3, 50)
+    expect(ensureDay(k, D1).roundSize).toBe(35)
+    setDailyMinutes(k, 5, D1)
+    expect(k.day!.roundSize).toBe(18)
+    round(k, 'review')
+    setDailyMinutes(k, 9, D1)
+    expect(k.day!.roundSize).toBe(18)
+    setDailyMinutes(k, 1, D1)
+    expect(k.settings.dailyMinutes).toBe(3)
+    setDailyMinutes(k, 60, D1)
+    expect(k.settings.dailyMinutes).toBe(15)
   })
 })

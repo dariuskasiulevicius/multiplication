@@ -1,7 +1,7 @@
 <script lang="ts">
   import { baseline } from '../../core/calibration'
   import { today } from '../../core/dates'
-  import { recentDays } from '../../core/kid'
+  import { MAX_DAILY_MINUTES, MIN_DAILY_MINUTES, recentDays, setDailyMinutes } from '../../core/kid'
   import { countTiers, rankWeak } from '../../core/mastery'
   import type { KidState } from '../../core/types'
   import { app, deleteKid, saveKid, syncNow } from '../../data/store.svelte'
@@ -25,6 +25,11 @@
 
   async function setBudget(field: 'recallBudgetMs' | 'legendRecallBudgetMs', secondsValue: number) {
     kid.settings[field] = Math.round(secondsValue * 1000)
+    await saveKid()
+  }
+
+  async function setMinutes(minutes: number) {
+    setDailyMinutes(kid, minutes, date)
     await saveKid()
   }
 
@@ -100,6 +105,23 @@
     </div>
 
     {#if message}<p class="card msg">{message}</p>{/if}
+
+    <section class="card stack">
+      <label class="stack">
+        <span class="row"
+          ><b>{t('dailyMinutes')}</b><span class="spacer"></span>{t('minutesValue', { n: kid.settings.dailyMinutes })}</span
+        >
+        <input
+          type="range"
+          min={MIN_DAILY_MINUTES}
+          max={MAX_DAILY_MINUTES}
+          step="1"
+          value={kid.settings.dailyMinutes}
+          oninput={(e) => setMinutes(Number(e.currentTarget.value))}
+        />
+      </label>
+      <p class="muted small">{t('dailyMinutesHelp', { name: kid.name })}</p>
+    </section>
 
     <section class="card stack">
       <label class="stack">
