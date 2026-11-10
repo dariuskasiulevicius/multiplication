@@ -7,6 +7,7 @@ import { digits, factId, inFamily, initialFacts, lessonFacts, type Lesson } from
 import { earnPlayDay, isWorldEnd, newJourney, phaseOf, worldOf, worldRange, type EarnEvents } from './journey'
 import { applyAnswer, countTiers, introduce, isGuess, type AnswerOutcome } from './mastery'
 import { uid, type Rng } from './rng'
+import { ROUND_SIZE, SIZABLE, TRIAL_SIZE } from './rounds'
 import type {
   AnswerRow,
   Batch,
@@ -29,6 +30,9 @@ export const DEFAULT_RECALL_BUDGET_MS = 10_000
 export const DEFAULT_LEGEND_RECALL_BUDGET_MS = 6000
 const HISTORY_DAYS = 120
 const DAY_SAMPLES = 300
+/** Play Days whose pace sizes today's Rounds. */
+const PACE_DAYS = 3
+const MAX_ROUND_SIZE = 40
 
 export interface NewKid {
   kidId: string
@@ -90,6 +94,7 @@ export function migrateKid(kid: KidState): KidState {
   kid.look ??= {}
   kid.trials ??= {}
   kid.revealedWorld ??= lastCompletedWorld(kid) ?? 0
+  if (kid.day) kid.day.roundSize ??= ROUND_SIZE
   const day = Math.max(1, kid.journey.playDays.length)
   for (const f of Object.values(kid.facts)) if (f.introduced) f.introducedDay ??= day
   return kid
@@ -126,13 +131,38 @@ function corePlan(kid: KidState, date: ISODate): RoundKind[] {
   }
 }
 
+/** Average play time per question over the last few Play Days before `date`, or null without any. */
+export function msPerQuestion(kid: KidState, date: ISODate): number | null {
+  const days = new Set(kid.journey.playDays.filter((d) => d < date).slice(-PACE_DAYS))
+  let ms = 0
+  let questions = 0
+  for (const h of kid.history) {
+    if (!days.has(h.date)) continue
+    ms += h.minutes * 60_000
+    questions += h.questions
+  }
+  return ms > 0 && questions > 0 ? ms / questions : null
+}
+
+/** Questions per sizable Core Round, so that all of `plan` fills about the Daily Cap at the Kid's recent pace. */
+export function roundSizeFor(kid: KidState, date: ISODate, plan: RoundKind[]): number {
+  const pace = msPerQuestion(kid, date)
+  const sizable = plan.filter((k) => SIZABLE.includes(k)).length
+  if (pace === null || sizable === 0) return ROUND_SIZE
+  const fixed = plan.filter((k) => !SIZABLE.includes(k)).reduce((n, k) => n + (k === 'trial' ? TRIAL_SIZE : ROUND_SIZE), 0)
+  const size = Math.round((DAILY_CAP_MS / pace - fixed) / sizable)
+  return Math.min(MAX_ROUND_SIZE, Math.max(ROUND_SIZE, size))
+}
+
 /** Today's progress; rolling over to a new date closes the previous day. */
 export function ensureDay(kid: KidState, date: ISODate): DayProgress {
   if (kid.day?.date === date) return kid.day
   if (kid.day && kid.outbox.length > 0) cutBatch(kid, kid.day.date)
+  const plan = corePlan(kid, date)
   kid.day = {
     date,
-    plan: corePlan(kid, date),
+    plan,
+    roundSize: roundSizeFor(kid, date, plan),
     coreDone: 0,
     bonusDone: 0,
     playMs: 0,

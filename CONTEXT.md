@@ -89,7 +89,10 @@ A one-time ~3 minute quiz on a Kid's first launch that detects Facts the Kid alr
 Five "type the number you see" taps that open every Session and update Baseline.
 
 **Round**:
-About 10 questions of one kind — Review, New Facts, Speed or Mixed.
+A run of questions of one kind — Review, New Facts, Speed or Mixed. Review, New Facts, Mixed and Weak Fact Rounds take the day's **Round Size**; a Speed Round stays 10 questions so its best time compares, a **Speed Trial** 20.
+
+**Round Size**:
+The number of questions in each sizable Core Round, set when the day starts so that the **Core Rounds** fill about the **Daily Cap** at the Kid's average time per question over the last 3 **Play Days**; between 10 and 40, and 10 without earlier Play Days.
 
 **Try**:
 One attempt at a question. A wrong Try is followed by another without showing the answer; only after the third wrong Try in a row is the answer shown, to be typed in. The first Try that is not a **Guess** is the counted one — it alone goes to the Fact's Tier and stats, so a later right Try is still a miss.
@@ -228,3 +231,4 @@ The settings area on a Kid's device, behind an adult gate.
 - A slow Kid could need more than 9 minutes for all **Core Rounds** — resolved: reaching the **Daily Cap** also earns the **Play Day**, so the daily time promise always holds.
 - New Facts **Rounds** used to turn into **Weak Fact** Rounds after 6 misses in the last 3 **Play Days** — resolved: at a usual ~8% miss rate on ~50 answers a day that threshold was always reached, so one Kid got no New Facts for three weeks. New Facts now come every Play Day; many recent misses only make the lesson smaller.
 - A draining speed bar showed **Target Time** during each question — resolved: removed, as it pushed Kids into fast **Guesses**; speed is still judged, just not shown.
+- Core Rounds were 10 questions each, about 3 minutes a day for a quick Kid — resolved: the **Round Size** grows with the Kid's pace so a day is about 9 minutes, in Legend too (fewer, longer Rounds).

@@ -133,3 +133,24 @@ describe('RoundRunner', () => {
     expect(r.done).toBe(true)
   })
 })
+
+describe('Round Size', () => {
+  const facts = () => {
+    const f = initialFacts()
+    for (const l of LESSONS.slice(0, 3)) for (const id of lessonFacts(l)) introduce(f[id], '2026-10-01')
+    return f
+  }
+
+  it('review, mixed, weak and New Facts Rounds take the day\'s size', () => {
+    for (const kind of ['review', 'mixed', 'weak', 'new'] as const) {
+      expect(ids(buildRound(kind, { ...ctx(facts()), roundSize: 26 }).items)).toHaveLength(26)
+    }
+  })
+
+  it('Speed and Bonus Rounds stay 10, a Speed Trial 20', () => {
+    const c = { ...ctx(facts()), roundSize: 26 }
+    expect(ids(buildRound('speed', c).items)).toHaveLength(ROUND_SIZE)
+    expect(ids(buildRound('bonus', c).items)).toHaveLength(ROUND_SIZE)
+    expect(ids(buildRound('trial', c).items)).toHaveLength(TRIAL_SIZE)
+  })
+})

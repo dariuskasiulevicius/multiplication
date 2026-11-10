@@ -171,7 +171,7 @@
 
   /** Start the next Round, or with `retry` that World's Speed Trial again (Bonus time only). */
   function startRound(retry: number | null = null) {
-    ensureDay(kid, date)
+    const day = ensureDay(kid, date)
     const next = nextRound(kid, date)
     if (!next) {
       app.screen = 'home'
@@ -197,6 +197,7 @@
         date,
         recentDays: recentDays(kid, date),
         recentMissRate: recentMissRate(kid, date),
+        roundSize: day.roundSize,
         rng: Math.random,
         worldFacts: trialWorld !== null ? worldFacts(kid, trialWorld) : undefined,
       })

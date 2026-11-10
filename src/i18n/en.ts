@@ -155,7 +155,7 @@ export const en = {
   },
   statFire: '🔥 Fire: {n}',
   legendNext: 'Next: Legend 👑',
-  legendRule1: '3 short rounds a day',
+  legendRule1: '3 rounds a day',
   legendRule2: 'A faster speed goal — go for 💎 Diamonds!',
   legendRule3: 'Grow your grid to 10 × 10 = 100 days',
   legendGo: "I'm ready!",
@@ -201,7 +201,7 @@ export const en = {
   // Help for kids
   helpButton: 'How to play?',
   helpTitle: 'How to play',
-  helpMission: '▶ Every day, press the big button and play your mission: about 5 short rounds, 5–9 minutes. Then come back tomorrow!',
+  helpMission: '▶ Every day, press the big button and play your mission: about 5 rounds, about 9 minutes. Then come back tomorrow!',
   helpFire: '🔥 Fire = how many days in a row you played. Play every day to keep it burning! Miss a day and it goes out — unless a Shield saves it.',
   helpShield: '🛡️ A Shield saves your fire if you miss a day. It works by itself. You get a new Shield when you finish a world (you can hold 2).',
   helpMedals: 'Every fact on your Sticker board can win a medal:',

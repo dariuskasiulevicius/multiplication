@@ -17,7 +17,9 @@ import {
   pendingReveal,
   playDayNumber,
   recentMissRate,
+  msPerQuestion,
   recordAnswer,
+  roundSizeFor,
   summarize,
   targetsFor,
   trialRetry,
@@ -299,5 +301,59 @@ describe('New Facts every day', () => {
     expect(k.outbox).toEqual([])
     expect(recordAnswer(k, { a: 2, b: 5, given: 12, ms: 900, round: 'new', date: D1, now }).guess).toBe(false)
     expect(k.facts['2x5']).toMatchObject({ wrong: 1, lastWrong: D1 })
+  })
+})
+
+describe('Round Size', () => {
+  /** A Kid whose last Play Days each took `minutes` for `questions`. */
+  function paced(minutes: number, questions: number, days = 3): KidState {
+    const k = playedDays(10)
+    k.history = k.journey.playDays.slice(-days).map((d) => ({ ...summarize(k, d), minutes, questions }))
+    return k
+  }
+  const PLAN = ['review', 'new', 'mixed', 'speed', 'weak'] as const
+
+  it('is 10 without earlier Play Days', () => {
+    expect(msPerQuestion(kid(), D1)).toBeNull()
+    expect(roundSizeFor(kid(), D1, [...PLAN])).toBe(10)
+  })
+
+  it('fills the 9 minutes at the pace of the last 3 Play Days', () => {
+    const k = paced(3, 50)
+    expect(msPerQuestion(k, D1)).toBe(3600)
+    // 540 s / 3.6 s = 150 questions; the Speed Round keeps 10, the other four share 140.
+    expect(roundSizeFor(k, D1, [...PLAN])).toBe(35)
+    expect(roundSizeFor(paced(6, 50), D1, [...PLAN])).toBe(16)
+  })
+
+  it('counts a Speed Trial as 20 questions', () => {
+    // 540 s / 4.8 s = 112.5 questions; 20 for the Trial, the other three share the rest.
+    expect(roundSizeFor(paced(4, 50), D1, ['review', 'new', 'mixed', 'trial'])).toBe(31)
+  })
+
+  it('stays between 10 and 40', () => {
+    expect(roundSizeFor(paced(1, 50), D1, [...PLAN])).toBe(40)
+    expect(roundSizeFor(paced(9, 30), D1, [...PLAN])).toBe(10)
+  })
+
+  it('only the last 3 Play Days set the pace, not older ones or today', () => {
+    const k = paced(3, 50)
+    k.history.unshift({ ...summarize(k, k.journey.playDays[0]), minutes: 30, questions: 10 })
+    k.history.push({ ...summarize(k, D1), minutes: 30, questions: 10 })
+    expect(msPerQuestion(k, D1)).toBe(3600)
+  })
+
+  it('is fixed with the day plan when the day starts', () => {
+    const k = paced(3, 50)
+    expect(ensureDay(k, D1).roundSize).toBe(35)
+    k.history = []
+    expect(ensureDay(k, D1).roundSize).toBe(35)
+  })
+
+  it('a day saved before Round Size existed keeps 10-question Rounds', () => {
+    const k = paced(3, 50)
+    ensureDay(k, D1)
+    delete (k.day as Partial<NonNullable<KidState['day']>>).roundSize
+    expect(migrateKid(k).day!.roundSize).toBe(10)
   })
 })

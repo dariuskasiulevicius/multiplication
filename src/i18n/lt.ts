@@ -153,7 +153,7 @@ export const lt: Dict = {
   statTrials: '🏆 Greičio išbandymų žvaigždučių: {n}',
   statFire: '🔥 Ugnis: {n}',
   legendNext: 'Toliau: Legenda 👑',
-  legendRule1: '3 trumpi raundai per dieną',
+  legendRule1: '3 raundai per dieną',
   legendRule2: 'Greitesnis tikslas — siek 💎 deimantų!',
   legendRule3: 'Išaugink lentelę iki 10 × 10 = 100 dienų',
   legendGo: 'Pradedam!',
@@ -201,7 +201,7 @@ export const lt: Dict = {
   // Help for kids
   helpButton: 'Kaip žaisti?',
   helpTitle: 'Kaip žaisti',
-  helpMission: '▶ Kasdien spausk didelį mygtuką ir žaisk savo misiją: apie 5 trumpus raundus, 5–9 minutes. Tada sugrįžk rytoj!',
+  helpMission: '▶ Kasdien spausk didelį mygtuką ir žaisk savo misiją: apie 5 raundus, apie 9 minutes. Tada sugrįžk rytoj!',
   helpFire: '🔥 Ugnis = kiek dienų iš eilės žaidei. Žaisk kasdien, kad ji degtų! Praleisi dieną — ji užges, nebent ją išgelbės skydas.',
   helpShield: '🛡️ Skydas išgelbės tavo ugnį, jei praleisi dieną. Jis veikia pats. Naują skydą gausi, kai įveiksi pasaulį (gali turėti 2).',
   helpMedals: 'Kiekvienas pavyzdys tavo lipdukų lentoje gali laimėti medalį:',
