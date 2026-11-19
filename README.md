@@ -49,13 +49,32 @@ The game creates these tabs:
 | `Board · <name>` | Each kid's 10 × 10 Sticker Board |
 | `State` | Full progress snapshot per kid, used to restore a device; also records the kid's active device |
 | `Batches` | Bookkeeping so retried uploads are not counted twice |
-| `Settings` | One row per kid: daily minutes, Recall Budget and Legend Recall Budget (seconds). Edit a value here and the kid's device takes it on its next sync |
+| `Settings` | One row per kid: daily minutes, Recall Budget and Legend Recall Budget (seconds), and **Reminder times**. Edit a value here and the kid's device takes it on its next sync |
+| `Reminders` | One row per device with play reminders turned on: its push subscription, when the last reminder went and the push service's answer (201 = delivered) |
 
 Good to know:
 
 - On first **Connect** the game stores a random secret in the script (**Project Settings → Script Properties → `SECRET`**). Requests without it are rejected. Connecting from a second parent device asks you to paste that secret.
 - Each kid has one active device. Opening a kid's setup link on a new device restores their progress there; the old device then offers "Play on this device" to move back.
 - Settings can be changed in the `Settings` tab or in **Settings for parents** on the kid's device; the later change wins. A kid's row appears after that device's first sync with this script version. The device picks up a sheet change on its next sync (opening the app, the Home screen, after every round), and today's rounds are resized if none has been played yet. Allowed values: 3–15 minutes, 1–15 seconds; out-of-range values are clamped, and a blank or mistyped cell is put back to the device's value.
+
+### Play reminders
+
+A kid's phone or tablet can get a notification at set times while today's Play Day isn't done yet; once it's earned, the reminders stop for the day.
+
+1. Update the script (below). Google asks for two new permissions — *connect to an external service* (to send the notifications) and *run when you're not present* (the reminder check every 15 minutes) — allow them.
+2. Update the game on the kid's device (the **Update** button on Home when it shows).
+3. **iPhone/iPad** (iOS 16.4 or newer): the game must be on the Home Screen (Safari → Share → Add to Home Screen) and opened from there.
+4. On the kid's device: ⚙️ → **Settings for parents** → **Play reminders** → **Turn on reminders** and allow notifications.
+5. In the `Settings` tab, **Reminder times** holds the kid's times, e.g. `07:30, 14:00, 16:00, 18:00, 20:00` (the default). Type `off` for none.
+
+Good to know:
+
+- Times are in the spreadsheet's time zone (**File → Settings → Time zone**); make sure it is yours.
+- A reminder goes at most once per time, up to an hour late, and not while the kid is playing (the device synced in the last 20 minutes) or on a device the kid has moved away from.
+- The script checks the `Days` tab, so a Play Day played offline still gets reminders until the device syncs.
+- The notification says nothing private to the push service: the script sends an empty message and the kid's device writes the words.
+- If the `Reminders` tab shows **410** or **404** in *Last result*, that device's subscription ended and the row is removed; turn reminders on again on that device.
 
 ### Updating the script
 

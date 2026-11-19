@@ -11,6 +11,8 @@ export interface SheetResponse {
   snapshot?: string | null
   /** Parent Settings changed in the sheet's Settings tab after this device last changed them. */
   settings?: SheetSettings | null
+  /** VAPID public key for Play Reminders; null until a device has made one. */
+  publicKey?: string | null
 }
 
 const MAX_BATCHES = 20
@@ -112,11 +114,25 @@ export interface PushResult {
   error?: string
 }
 
+export interface VapidKeys {
+  publicKey: string
+  privateKey: string
+  /** Contact for push services: the game's URL. */
+  subject: string
+}
+
+/** The Family Sheet's VAPID public key; with `keys`, offer them in case it has none yet. */
+export function fetchPushKey(cfg: SyncConfig, keys?: VapidKeys): Promise<SheetResponse> {
+  return post(cfg.url, { action: 'pushKey', secret: cfg.secret, ...keys })
+}
+
 /**
  * Send waiting Batches, a fresh snapshot and the Parent Settings. Returns the
  * ids the sheet accepted and any Parent Settings changed in the sheet since.
+ * `push` is this device's Play Reminder subscription (null: none); leave it
+ * out when it can't be known, so the sheet keeps what it has.
  */
-export async function pushBatches(kid: KidState): Promise<PushResult> {
+export async function pushBatches(kid: KidState, push?: PushSubscriptionJSON | null): Promise<PushResult> {
   if (!kid.sync) return { sent: [] }
   const batches: Batch[] = kid.pending.slice(0, MAX_BATCHES)
   const res = await post(kid.sync.url, {
@@ -134,6 +150,7 @@ export async function pushBatches(kid: KidState): Promise<PushResult> {
       legendRecallBudgetMs: kid.settings.legendRecallBudgetMs,
       changedAt: kid.settingsChangedAt,
     },
+    push,
   })
   if (!res.ok) return { sent: [], error: res.error ?? 'unknown' }
   return { sent: batches.map((b) => b.id), settings: res.settings ?? undefined }

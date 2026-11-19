@@ -191,6 +191,10 @@ Sending a finished Session's data and a full progress snapshot to the Family She
 A Kid's daily minutes, Recall Budget and Legend Recall Budget; the Parent changes them in the **Parent Menu** or in the Family Sheet's Settings tab, and on the next **Sync** the later change wins.
 _Avoid_: Config, preferences (the Kid's own language, sound and Theme are not Parent Settings)
 
+**Play Reminder**:
+A notification on a Kid's device at one of the Kid's reminder times (07:30, 14:00, 16:00, 18:00, 20:00 by default, set per Kid in the Family Sheet's Settings tab) while that day's **Play Day** isn't earned yet. The Family Sheet decides when and sends an empty push; the device writes the words (the Kid's name, Theme avatar and Streak). Turned on per device in the **Parent Menu**; on iPhone and iPad only for the game added to the Home Screen.
+_Avoid_: Alert, nag
+
 **Restore**:
 Rebuilding a Kid's progress on a device from the snapshot in the Family Sheet.
 
@@ -238,4 +242,5 @@ The settings area on a Kid's device, behind an adult gate.
 - A draining speed bar showed **Target Time** during each question — resolved: removed, as it pushed Kids into fast **Guesses**; speed is still judged, just not shown.
 - Core Rounds were 10 questions each, about 3 minutes a day for a quick Kid — resolved: the **Round Size** grows with the Kid's pace so a day fills about the **Daily Cap**, in Legend too; the Parent sets the daily minutes per Kid, since a Kid who has nearly every Fact needs less.
 - Rounds of 25–36 questions felt long, and a Kid started skipping days — resolved: the **Round Size** stops at 20 and a long day gets more Rounds instead.
+- Kids forgot to play for days and lost their Streak — resolved: **Play Reminders**, a few times a day, only until the **Play Day** is earned.
 - **Guesses** were dropped entirely, so the Parent could no longer see guessing — resolved: they are logged in the Family Sheet as Guess rows (Correct and Fast left blank), still counted nowhere.
