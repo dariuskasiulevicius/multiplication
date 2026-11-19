@@ -65,7 +65,7 @@ A correct answer given within Target Time on the counted **Try**.
 A correct answer given after Target Time; counts as correct but earns no speed credit.
 
 **Guess**:
-A wrong answer typed as one repeated digit (11, 22 … 99) — never a real product, so it is not counted: no miss, no Dusty mark, not in stats or the Family Sheet.
+A wrong answer typed as one repeated digit (11, 22 … 99) — never a real product, so it is not counted: no miss, no Dusty mark, not in stats. It is only logged in the Family Sheet's Answers tab, marked as a Guess, so the Parent can see the guessing.
 _Avoid_: Mash, spam
 
 **Mastered**:
@@ -92,20 +92,20 @@ Five "type the number you see" taps that open every Session and update Baseline.
 A run of questions of one kind — Review, New Facts, Speed or Mixed. Review, New Facts, Mixed and Weak Fact Rounds take the day's **Round Size**; a Speed Round stays 10 questions so its best time compares, a **Speed Trial** 20.
 
 **Round Size**:
-The number of questions in each sizable Core Round, set when the day starts so that the **Core Rounds** fill about the **Daily Cap** at the Kid's average time per question over the last 3 **Play Days**; between 10 and 40, and 10 without earlier Play Days.
+The number of questions in each sizable Core Round, set when the day starts so that the **Core Rounds** fill about the **Daily Cap** at the Kid's average time per question over the last 3 **Play Days**; between 10 and 20, and 10 without earlier Play Days. Where 20 is too few, the day gets up to 3 more Mixed Rounds, before its last Round; past that the rest is Bonus time.
 
 **Try**:
 One attempt at a question. A wrong Try is followed by another without showing the answer; only after the third wrong Try in a row is the answer shown, to be typed in. The first Try that is not a **Guess** is the counted one — it alone goes to the Fact's Tier and stats, so a later right Try is still a miss.
 _Avoid_: Attempt, retry (a retry is the missed Fact asked again later in the Round)
 
 **Core Rounds**:
-The fixed set of Rounds (about 5 normally, 3 in Legend) that must be finished to earn a Play Day.
+The day's set of Rounds (about 5 normally, 3 in Legend, plus up to 3 Mixed Rounds on a long day) that earns a Play Day when finished.
 
 **Bonus Round**:
 An optional Round played after Core Rounds, allowed until the Daily Cap.
 
 **Daily Cap**:
-The Kid's daily minutes of play per calendar day — 9 by default, set per Kid by the Parent between 3 and 15 — summed over all Sessions; reaching it ends the day's play and earns the Play Day even if Core Rounds are unfinished. The **Round Size** is set to fill it.
+The Kid's daily minutes of play per calendar day — 9 by default, set per Kid by the Parent between 3 and 15 — summed over all Sessions; reaching 90% of it earns the Play Day even if Core Rounds are unfinished, also when the Kid stops in the middle of a Round, and reaching all of it ends the day's play. The **Round Size** is set to fill it.
 
 **Session**:
 One continuous sitting in the app, from opening to leaving; a Play Day's Core Rounds may be spread over several Sessions on the same calendar day.
@@ -113,7 +113,7 @@ One continuous sitting in the app, from opening to leaving; a Play Day's Core Ro
 ### Challenge
 
 **Play Day**:
-A calendar day (device local date) on which the Kid finished Core Rounds or reached the Daily Cap.
+A calendar day (device local date) on which the Kid finished Core Rounds or played 90% of the Daily Cap.
 _Avoid_: Day (alone), lesson
 
 **Challenge**:
@@ -233,6 +233,9 @@ The settings area on a Kid's device, behind an adult gate.
 - Kids did not understand "streak" or "tier" — resolved: the kid-facing screens say "fire" (🔥, LT "ugnelė") for the **Streak** and "medal" (🥉 🥈 🥇 💎) for a **Tier**; the domain terms stay as defined here.
 - Mastery was first counted in **Play Days** — resolved: any day with a Fast Answer counts, even if that day's **Core Rounds** were not finished, because those answers still count toward **Facts**.
 - A slow Kid could need more than 9 minutes for all **Core Rounds** — resolved: reaching the **Daily Cap** also earns the **Play Day**, so the daily time promise always holds.
+- A Kid who stopped at 6.9 of 7 minutes lost the **Play Day** (and a **Shield**) — resolved: 90% of the **Daily Cap** earns it, counted also when a Round is stopped early.
 - New Facts **Rounds** used to turn into **Weak Fact** Rounds after 6 misses in the last 3 **Play Days** — resolved: at a usual ~8% miss rate on ~50 answers a day that threshold was always reached, so one Kid got no New Facts for three weeks. New Facts now come every Play Day; many recent misses only make the lesson smaller.
 - A draining speed bar showed **Target Time** during each question — resolved: removed, as it pushed Kids into fast **Guesses**; speed is still judged, just not shown.
-- Core Rounds were 10 questions each, about 3 minutes a day for a quick Kid — resolved: the **Round Size** grows with the Kid's pace so a day fills about the **Daily Cap**, in Legend too (fewer, longer Rounds); the Parent sets the daily minutes per Kid, since a Kid who has nearly every Fact needs less.
+- Core Rounds were 10 questions each, about 3 minutes a day for a quick Kid — resolved: the **Round Size** grows with the Kid's pace so a day fills about the **Daily Cap**, in Legend too; the Parent sets the daily minutes per Kid, since a Kid who has nearly every Fact needs less.
+- Rounds of 25–36 questions felt long, and a Kid started skipping days — resolved: the **Round Size** stops at 20 and a long day gets more Rounds instead.
+- **Guesses** were dropped entirely, so the Parent could no longer see guessing — resolved: they are logged in the Family Sheet as Guess rows (Correct and Fast left blank), still counted nowhere.

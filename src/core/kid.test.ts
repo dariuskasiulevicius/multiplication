@@ -18,10 +18,11 @@ import {
   playDayNumber,
   recentMissRate,
   msPerQuestion,
+  planDay,
   recordAnswer,
-  roundSizeFor,
   setDailyMinutes,
   setRecallBudget,
+  stopRound,
   applySheetSettings,
   summarize,
   targetsFor,
@@ -83,6 +84,36 @@ describe('a Play Day', () => {
     expect(r.earned).not.toBeNull()
     expect(r.capReached).toBe(true)
     expect(nextRound(k, D1)).toBeNull()
+  })
+
+  it('90% of the Daily Cap already earns the Play Day; Bonus Rounds go on to the full cap', () => {
+    const k = kid()
+    k.settings.dailyMinutes = 5
+    finishPlacement(k, [], D1)
+    expect(round(k, 'placement', true, 269_000).earned).toBeNull()
+    const r = round(k, 'new', true, 1000)
+    expect(r.earned).not.toBeNull()
+    expect(r.capReached).toBe(false)
+    expect(nextRound(k, D1)).toMatchObject({ kind: 'bonus' })
+  })
+
+  it('stopping a Round counts its time and earns the Play Day at 90% of the Daily Cap', () => {
+    const k = kid()
+    k.settings.dailyMinutes = 7
+    finishPlacement(k, [], D1)
+    round(k, 'placement', true, 300_000)
+    recordAnswer(k, { a: 2, b: 3, given: 6, ms: 1500, round: 'new', date: D1, now })
+    expect(stopRound(k, { playMs: 60_000, date: D1 })).toBeNull()
+    expect(k.day).toMatchObject({ playMs: 360_000, earned: false, coreDone: 1 })
+    expect(k.pending).toHaveLength(1)
+
+    const r = stopRound(k, { playMs: 18_000, date: D1 }, () => 0)
+    expect(r?.earned).toMatchObject({ playDay: 1 })
+    expect(r?.chest).not.toBeNull()
+    expect(k.day).toMatchObject({ earned: true, coreDone: 1 })
+    expect(k.pending).toHaveLength(2)
+    expect(k.pending[1].answers).toHaveLength(1)
+    expect(stopRound(k, { playMs: 60_000, date: D1 })).toBeNull()
   })
 
   it('splits Core Rounds over Sessions on the same day and starts fresh tomorrow', () => {
@@ -292,7 +323,7 @@ describe('New Facts every day', () => {
     expect(recentMissRate(k, D1)).toBeCloseTo(7 / 61)
   })
 
-  it('a Guess is not counted: no miss, no stats, no answer row', () => {
+  it('a Guess is not counted (no miss, no stats) but goes to the Family Sheet as a Guess', () => {
     const k = kid()
     introduceLesson(k, LESSONS[2], D1)
     const before = structuredClone(k.facts['2x5'])
@@ -301,42 +332,61 @@ describe('New Facts every day', () => {
     expect(r.outcome.correct).toBe(false)
     expect(k.facts['2x5']).toEqual(before)
     expect(k.day).toMatchObject({ questions: 0, correct: 0 })
-    expect(k.outbox).toEqual([])
-    expect(recordAnswer(k, { a: 2, b: 5, given: 12, ms: 900, round: 'new', date: D1, now }).guess).toBe(false)
+    expect(recordAnswer(k, { a: 2, b: 5, given: 12, ms: 2400, round: 'new', date: D1, now }).guess).toBe(false)
     expect(k.facts['2x5']).toMatchObject({ wrong: 1, lastWrong: D1 })
+
+    round(k, 'new')
+    const [batch] = k.pending
+    expect(batch.answers).toMatchObject([{ given: 12, ms: 2400 }])
+    expect(batch.answers[0].guess).toBeUndefined()
+    expect(batch.guesses).toMatchObject([{ a: 2, b: 5, given: 88, ms: 900, correct: false, fast: false, round: 'new' }])
+    expect(batch.day.questions).toBe(1)
   })
 })
 
 describe('Round Size', () => {
   /** A Kid whose last Play Days each took `minutes` for `questions`. */
-  function paced(minutes: number, questions: number, days = 3): KidState {
-    const k = playedDays(10)
-    k.history = k.journey.playDays.slice(-days).map((d) => ({ ...summarize(k, d), minutes, questions }))
+  function paced(minutes: number, questions: number, played = 10): KidState {
+    const k = playedDays(played)
+    k.facts['1x1'].introduced = true
+    k.history = k.journey.playDays.slice(-3).map((d) => ({ ...summarize(k, d), minutes, questions }))
     return k
   }
-  const PLAN = ['review', 'new', 'mixed', 'speed', 'weak'] as const
+  const PLAN = ['review', 'new', 'mixed', 'speed', 'weak']
 
   it('is 10 without earlier Play Days', () => {
     expect(msPerQuestion(kid(), D1)).toBeNull()
-    expect(roundSizeFor(kid(), D1, [...PLAN])).toBe(10)
+    expect(planDay(kid(), D1).roundSize).toBe(10)
   })
 
-  it('fills the 9 minutes at the pace of the last 3 Play Days', () => {
-    const k = paced(3, 50)
-    expect(msPerQuestion(k, D1)).toBe(3600)
-    // 540 s / 3.6 s = 150 questions; the Speed Round keeps 10, the other four share 140.
-    expect(roundSizeFor(k, D1, [...PLAN])).toBe(35)
-    expect(roundSizeFor(paced(6, 50), D1, [...PLAN])).toBe(16)
+  it('fills the day at the pace of the last 3 Play Days', () => {
+    const k = paced(6, 50)
+    expect(msPerQuestion(k, D1)).toBe(7200)
+    // 540 s / 7.2 s = 75 questions; the Speed Round keeps 10, the other four share 65.
+    expect(planDay(k, D1)).toEqual({ plan: PLAN, roundSize: 16 })
   })
 
-  it('counts a Speed Trial as 20 questions', () => {
-    // 540 s / 4.8 s = 112.5 questions; 20 for the Trial, the other three share the rest.
-    expect(roundSizeFor(paced(4, 50), D1, ['review', 'new', 'mixed', 'trial'])).toBe(31)
+  it('adds Mixed Rounds before the last Round rather than go over 20 questions', () => {
+    // 540 s / 4.5 s = 120 questions; 110 for the sizable Rounds take 6 of 18, not 4 of 28.
+    expect(planDay(paced(4.5, 60), D1)).toEqual({
+      plan: ['review', 'new', 'mixed', 'speed', 'mixed', 'mixed', 'weak'],
+      roundSize: 18,
+    })
   })
 
-  it('stays between 10 and 40', () => {
-    expect(roundSizeFor(paced(1, 50), D1, [...PLAN])).toBe(40)
-    expect(roundSizeFor(paced(9, 30), D1, [...PLAN])).toBe(10)
+  it('adds at most 3 Rounds, then caps them at 20', () => {
+    const { plan, roundSize } = planDay(paced(1, 50), D1)
+    expect(plan).toHaveLength(8)
+    expect(roundSize).toBe(20)
+    expect(planDay(paced(9, 30), D1)).toEqual({ plan: PLAN, roundSize: 10 })
+  })
+
+  it('keeps the Speed Trial last and counts it as 20 questions', () => {
+    // 540 s / 4.8 s = 112.5 questions; 20 for the Trial, 92.5 take 5 Rounds of 19.
+    expect(planDay(paced(4, 50, 6), D1)).toEqual({
+      plan: ['review', 'new', 'mixed', 'mixed', 'mixed', 'trial'],
+      roundSize: 19,
+    })
   })
 
   it('only the last 3 Play Days set the pace, not older ones or today', () => {
@@ -347,24 +397,27 @@ describe('Round Size', () => {
   })
 
   it('is fixed with the day plan when the day starts', () => {
-    const k = paced(3, 50)
-    expect(ensureDay(k, D1).roundSize).toBe(35)
+    const k = paced(4.5, 60)
+    expect(ensureDay(k, D1)).toMatchObject({ roundSize: 18, plan: { length: 7 } })
     k.history = []
-    expect(ensureDay(k, D1).roundSize).toBe(35)
+    expect(ensureDay(k, D1)).toMatchObject({ roundSize: 18, plan: { length: 7 } })
   })
 
-  it('a day saved before Round Size existed keeps 10-question Rounds', () => {
+  it('a saved day keeps its Rounds, at most 20 questions each', () => {
     const k = paced(3, 50)
     ensureDay(k, D1)
     delete (k.day as Partial<NonNullable<KidState['day']>>).roundSize
     expect(migrateKid(k).day!.roundSize).toBe(10)
+    k.day!.roundSize = 35
+    expect(migrateKid(k).day!.roundSize).toBe(20)
   })
 })
 
 describe('daily minutes', () => {
-  const PLAN = ['review', 'new', 'mixed', 'speed', 'weak'] as const
+  const PLAN = ['review', 'new', 'mixed', 'speed', 'weak']
   function paced(minutes: number, questions: number): KidState {
     const k = playedDays(10)
+    k.facts['1x1'].introduced = true
     k.history = k.journey.playDays.slice(-3).map((d) => ({ ...summarize(k, d), minutes, questions }))
     return k
   }
@@ -380,7 +433,7 @@ describe('daily minutes', () => {
     const k = paced(3, 50)
     k.settings.dailyMinutes = 5
     // 300 s / 3.6 s = 83 questions; the Speed Round keeps 10, the other four share the rest.
-    expect(roundSizeFor(k, D1, [...PLAN])).toBe(18)
+    expect(planDay(k, D1)).toEqual({ plan: PLAN, roundSize: 18 })
   })
 
   it('is the Daily Cap', () => {
@@ -394,14 +447,14 @@ describe('daily minutes', () => {
     expect(nextRound(k, D1)).toBeNull()
   })
 
-  it('changing it resizes today until a Round is played, and stays 3–15', () => {
+  it('changing it replans today until a Round is played, and stays 3–15', () => {
     const k = paced(3, 50)
-    expect(ensureDay(k, D1).roundSize).toBe(35)
+    expect(ensureDay(k, D1)).toMatchObject({ roundSize: 20, plan: { length: 8 } })
     setDailyMinutes(k, 5, D1)
-    expect(k.day!.roundSize).toBe(18)
+    expect(k.day).toMatchObject({ roundSize: 18, plan: PLAN })
     round(k, 'review')
     setDailyMinutes(k, 9, D1)
-    expect(k.day!.roundSize).toBe(18)
+    expect(k.day).toMatchObject({ roundSize: 18, plan: PLAN })
     setDailyMinutes(k, 1, D1)
     expect(k.settings.dailyMinutes).toBe(3)
     setDailyMinutes(k, 60, D1)
@@ -429,11 +482,11 @@ describe('Parent Settings from the Family Sheet', () => {
     const k = playedDays(10)
     k.history = k.journey.playDays.slice(-3).map((d) => ({ ...summarize(k, d), minutes: 3, questions: 50 }))
     setDailyMinutes(k, 9, D1, T1)
-    expect(ensureDay(k, D1).roundSize).toBe(35)
+    expect(ensureDay(k, D1)).toMatchObject({ roundSize: 20, plan: { length: 8 } })
     expect(applySheetSettings(k, { changedAt: T2, dailyMinutes: 5, recallBudgetMs: 4000 }, D1)).toBe(true)
     expect(k.settings).toMatchObject({ dailyMinutes: 5, recallBudgetMs: 4000, legendRecallBudgetMs: 6000 })
     expect(k.settingsChangedAt).toBe(T2)
-    expect(k.day!.roundSize).toBe(18)
+    expect(k.day).toMatchObject({ roundSize: 18, plan: { length: 5 } })
   })
 
   it('keeps a later change made on the device', () => {

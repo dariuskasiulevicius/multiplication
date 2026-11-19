@@ -14,6 +14,7 @@
     recentMissRate,
     recordAnswer,
     recordTap,
+    stopRound,
     targetsFor,
     trialRetry,
     trialWorldFor,
@@ -22,7 +23,7 @@
     type RoundResult,
     type TrialOutcome,
   } from '../../core/kid'
-  import { tierRank, type AnswerOutcome } from '../../core/mastery'
+  import { isGuess, tierRank, type AnswerOutcome } from '../../core/mastery'
   import { Placement } from '../../core/placement'
   import { pick } from '../../core/rng'
   import { buildRound, choiceOptions, RoundRunner, type RoundItem } from '../../core/rounds'
@@ -94,6 +95,8 @@
 
   // Results
   let result = $state<RoundResult | null>(null)
+  /** The Round was stopped early, but its time earned the Play Day. */
+  let stopped = $state(false)
   let stats = $state({ correct: 0, total: 0, fast: 0, timeMs: 0 })
   let placementKnown = $state(0)
   let newGold = $state(0)
@@ -181,6 +184,7 @@
     round = retry !== null ? { ...next, kind: 'trial' } : next
     trialWorld = retry ?? (next.kind === 'trial' ? trialWorldFor(kid, date) : null)
     trialOutcome = null
+    stopped = false
     combo = 0
     stats = { correct: 0, total: 0, fast: 0, timeMs: 0 }
     activeMs = 0
@@ -285,9 +289,9 @@
       return
     }
 
-    // Only the first Try that isn't a Guess counts toward the Fact.
+    // Only the first Try that isn't a Guess counts toward the Fact; every Guess is logged.
     let counted: AnswerOutcome | null = null
-    if (!scored) {
+    if (!scored || isGuess(given, answer)) {
       const ms = performance.now() - shownAt
       const { outcome, guess } = recordAnswer(kid, { a, b, given, ms, round: kind, date, now: new Date() })
       if (!guess) {
@@ -360,11 +364,15 @@
       stats = { correct: runner.correct, total: runner.answered, fast: runner.fast, timeMs: answerMs }
       if (trialWorld !== null) trialOutcome = finishTrial(kid, trialWorld, runner.fast, runner.answered)
     }
-    result = completeRound(kid, { kind, core: r.core, playMs: activeMs, roundMs: Math.round(answerMs), date })
+    await showSummary(completeRound(kid, { kind, core: r.core, playMs: activeMs, roundMs: Math.round(answerMs), date }))
+  }
+
+  async function showSummary(r: RoundResult) {
+    result = r
     stage = 'summary'
-    revealing = result.earned?.worldCompleted != null
+    revealing = r.earned?.worldCompleted != null
     fire++
-    if (result.earned) sfx.dayDone()
+    if (r.earned) sfx.dayDone()
     else sfx.roundEnd()
     await saveKid()
     void syncNow()
@@ -374,7 +382,14 @@
     if (stage === 'play' && !confirm(t('stopRound'))) return
     if (stage === 'play') {
       tick()
-      if (kid.day) kid.day.playMs += activeMs
+      clearTimeout(hintTimer)
+      // The Round's time still counts; if it makes the Play Day, celebrate it.
+      const r = stopRound(kid, { playMs: activeMs, date })
+      if (r) {
+        stopped = true
+        void showSummary(r)
+        return
+      }
       void saveKid()
     }
     app.screen = 'home'
@@ -477,7 +492,9 @@
     <Numpad onDigit={digit} onBack={back} />
   {:else if stage === 'summary' && result}
     <section class="stage center stack pop">
-      {#if kind === 'placement'}
+      {#if stopped}
+        <div class="emoji">🎉</div>
+      {:else if kind === 'placement'}
         <div class="emoji">🧭</div>
         <h1>{placementKnown > 0 ? t('placementDone', { n: placementKnown }) : t('placementZero')}</h1>
       {:else if kind === 'trial' && trialOutcome}
