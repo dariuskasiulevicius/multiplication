@@ -135,11 +135,15 @@ export interface AnswerRow {
   baselineMs: number
   fast: boolean
   round: RoundKind
+  /** A Guess: logged for the Parent, counted nowhere. */
+  guess?: boolean
 }
 
 export interface Batch {
   id: string
   answers: AnswerRow[]
+  /** Guesses go apart, so a Family Sheet script from before them ignores them. */
+  guesses?: AnswerRow[]
   day: DaySummary
 }
 

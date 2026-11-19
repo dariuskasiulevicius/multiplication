@@ -10,7 +10,7 @@
 var TABS = {
   answers: {
     name: 'Answers',
-    header: ['Kid', 'Date', 'Time', 'Fact', 'Answer', 'Given', 'Correct', 'Fast', 'Ms', 'Target ms', 'Baseline ms', 'Round', 'Kid id', 'Answer id'],
+    header: ['Kid', 'Date', 'Time', 'Fact', 'Answer', 'Given', 'Correct', 'Fast', 'Ms', 'Target ms', 'Baseline ms', 'Round', 'Kid id', 'Answer id', 'Guess'],
   },
   days: {
     name: 'Days',
@@ -108,6 +108,10 @@ function tab_(def) {
     sheet = ss.insertSheet(def.name);
     sheet.getRange(1, 1, 1, def.header.length).setValues([def.header]).setFontWeight('bold');
     sheet.setFrozenRows(1);
+  } else if (sheet.getLastColumn() < def.header.length) {
+    // A newer version of this script added columns: head them.
+    var from = sheet.getLastColumn() + 1;
+    sheet.getRange(1, from, 1, def.header.length - from + 1).setValues([def.header.slice(from - 1)]).setFontWeight('bold');
   }
   return sheet;
 }
@@ -175,25 +179,18 @@ function sync_(req) {
   (req.batches || []).forEach(function (b) {
     if (findRow_(batches, 1, b.id)) return; // already stored by an earlier retry
     (b.answers || []).forEach(function (a) {
-      answerRows.push([
-        req.kidName,
-        a.date,
-        new Date(a.ts),
-        a.a + ' × ' + a.b,
-        a.a * a.b,
-        a.given === null ? '' : a.given,
-        a.correct,
-        a.fast,
-        a.ms,
-        a.targetMs,
-        a.baselineMs,
-        a.round,
-        req.kidId,
-        a.id,
-      ]);
+      answerRows.push(answerRow_(req, a, false));
+    });
+    // A Guess (88, 555 …) counts for nothing in the app; it is logged here only for the Parent.
+    (b.guesses || []).forEach(function (a) {
+      answerRows.push(answerRow_(req, a, true));
     });
     upsertDay_(days, req, b.day);
     batchRows.push([b.id, req.kidId, now]);
+  });
+  // Guesses sit right before the answer that followed them.
+  answerRows.sort(function (x, y) {
+    return x[2].getTime() - y[2].getTime();
   });
 
   if (answerRows.length) {
@@ -205,6 +202,27 @@ function sync_(req) {
   if (req.snapshot) writeSnapshot_(state, row, req.snapshot);
   if (req.board) writeBoard_(req.kidName, req.board);
   return { ok: true, settings: syncSettings_(req) };
+}
+
+/** One Answers row; a Guess leaves Correct and Fast blank, as it was not counted. */
+function answerRow_(req, a, guess) {
+  return [
+    req.kidName,
+    a.date,
+    new Date(a.ts),
+    a.a + ' × ' + a.b,
+    a.a * a.b,
+    a.given === null ? '' : a.given,
+    guess ? '' : a.correct,
+    guess ? '' : a.fast,
+    a.ms,
+    a.targetMs,
+    a.baselineMs,
+    a.round,
+    req.kidId,
+    a.id,
+    guess,
+  ];
 }
 
 /**

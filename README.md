@@ -4,7 +4,7 @@ A browser game that teaches kids the whole 1–10 multiplication table **to spee
 
 - **The Challenge** is 49 Play Days (7 × 7): seven Worlds of seven days, drawn as a 7 × 7 square on the Journey Grid.
 - **Legend** keeps going to Play Day 100 (10 × 10) with fewer, longer Rounds and a stricter speed goal. Day 49 and day 100 end with a big ceremony; after day 100 it is free play with no streak to keep.
-- Every day: a warm-up, about five Rounds (review, new facts, mix, speed, tricky ones) sized to the kid's recent pace so the day fills the kid's daily minutes (9 by default, the parent can set 3–15), then "see you tomorrow".
+- Every day: a warm-up, about five Rounds (review, new facts, mix, speed, tricky ones) of at most 20 questions, sized to the kid's recent pace so the day fills the kid's daily minutes (9 by default, the parent can set 3–15; a long day gets a few more Rounds), then "see you tomorrow". 90% of the minutes already counts as a Play Day, even if the kid stops mid-Round.
 - Speed is judged against each kid's own typing speed plus a Recall Budget, so a 7-year-old and an 11-year-old are both challenged fairly.
 - Facts level up on a 10 × 10 Sticker Board: bronze → silver → gold (mastered) → diamond.
 - Each World's last day ends with a 20-question **Speed Trial** worth up to ⭐⭐⭐; every Play Day opens a **Mystery Chest**. Stars buy hats, buddies and sparkles for the kid's avatar in the **Shop** (tap the avatar). Looks only — nothing in the shop changes the game.
@@ -45,7 +45,7 @@ The game creates these tabs:
 | Tab | What's in it |
 | --- | --- |
 | `Days` | One row per kid per day: Play Day, minutes, questions, accuracy, % fast, median answer time, gold and diamond counts, streak, shields |
-| `Answers` | Every answer: fact, given answer, correct, fast, time, Target Time and the typing baseline used |
+| `Answers` | Every answer: fact, given answer, correct, fast, time, Target Time and the typing baseline used. Guesses (one repeated digit like 55 or 88, typed before the real answer) are rows with **Guess** ✓ and Correct/Fast left blank; the game doesn't count them |
 | `Board · <name>` | Each kid's 10 × 10 Sticker Board |
 | `State` | Full progress snapshot per kid, used to restore a device; also records the kid's active device |
 | `Batches` | Bookkeeping so retried uploads are not counted twice |

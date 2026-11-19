@@ -37,7 +37,12 @@ const HISTORY_DAYS = 120
 const DAY_SAMPLES = 300
 /** Play Days whose pace sizes today's Rounds. */
 const PACE_DAYS = 3
-const MAX_ROUND_SIZE = 40
+/** Questions in a sizable Round at most; a longer day gets more Rounds instead. */
+export const MAX_ROUND_SIZE = 20
+/** Mixed Rounds a day may add to fill the Daily Cap; past that the rest is Bonus time. */
+const MAX_EXTRA_ROUNDS = 3
+/** Share of the Daily Cap that earns the Play Day even with Core Rounds left. */
+export const EARN_SHARE = 0.9
 
 export interface NewKid {
   kidId: string
@@ -103,7 +108,7 @@ export function migrateKid(kid: KidState): KidState {
   kid.look ??= {}
   kid.trials ??= {}
   kid.revealedWorld ??= lastCompletedWorld(kid) ?? 0
-  if (kid.day) kid.day.roundSize ??= ROUND_SIZE
+  if (kid.day) kid.day.roundSize = Math.min(kid.day.roundSize ?? ROUND_SIZE, MAX_ROUND_SIZE)
   const day = Math.max(1, kid.journey.playDays.length)
   for (const f of Object.values(kid.facts)) if (f.introduced) f.introducedDay ??= day
   return kid
@@ -150,7 +155,7 @@ const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(mi
 /** Today's Rounds follow new daily minutes, unless one has been played already. */
 function resizeUnstartedDay(kid: KidState, date: ISODate): void {
   const day = kid.day?.date === date ? kid.day : null
-  if (day && day.coreDone === 0 && day.bonusDone === 0) day.roundSize = roundSizeFor(kid, date, day.plan)
+  if (day && day.coreDone === 0 && day.bonusDone === 0) Object.assign(day, planDay(kid, date))
 }
 
 /** Set the Kid's daily minutes (3–15) from the Parent Menu. */
@@ -198,25 +203,37 @@ export function msPerQuestion(kid: KidState, date: ISODate): number | null {
   return ms > 0 && questions > 0 ? ms / questions : null
 }
 
-/** Questions per sizable Core Round, so that all of `plan` fills about the Daily Cap at the Kid's recent pace. */
-export function roundSizeFor(kid: KidState, date: ISODate, plan: RoundKind[]): number {
+export interface DayPlan {
+  plan: RoundKind[]
+  /** Questions per sizable Core Round. */
+  roundSize: number
+}
+
+/**
+ * Today's Core Rounds and Round Size, so that they fill about the Daily Cap at
+ * the Kid's recent pace. Rounds stay at 20 questions or fewer: a longer day
+ * gets up to 3 more Mixed Rounds, put before the last Round so a Speed Trial
+ * or the Weak Facts round still ends the day.
+ */
+export function planDay(kid: KidState, date: ISODate): DayPlan {
+  const plan = corePlan(kid, date)
   const pace = msPerQuestion(kid, date)
   const sizable = plan.filter((k) => SIZABLE.includes(k)).length
-  if (pace === null || sizable === 0) return ROUND_SIZE
+  if (pace === null || sizable === 0) return { plan, roundSize: ROUND_SIZE }
   const fixed = plan.filter((k) => !SIZABLE.includes(k)).reduce((n, k) => n + (k === 'trial' ? TRIAL_SIZE : ROUND_SIZE), 0)
-  const size = Math.round((dailyCapMs(kid) / pace - fixed) / sizable)
-  return Math.min(MAX_ROUND_SIZE, Math.max(ROUND_SIZE, size))
+  const questions = dailyCapMs(kid) / pace - fixed
+  const extra = clamp(Math.ceil(questions / MAX_ROUND_SIZE) - sizable, 0, MAX_EXTRA_ROUNDS)
+  plan.splice(plan.length - 1, 0, ...Array<RoundKind>(extra).fill('mixed'))
+  return { plan, roundSize: clamp(Math.round(questions / (sizable + extra)), ROUND_SIZE, MAX_ROUND_SIZE) }
 }
 
 /** Today's progress; rolling over to a new date closes the previous day. */
 export function ensureDay(kid: KidState, date: ISODate): DayProgress {
   if (kid.day?.date === date) return kid.day
   if (kid.day && kid.outbox.length > 0) cutBatch(kid, kid.day.date)
-  const plan = corePlan(kid, date)
   kid.day = {
     date,
-    plan,
-    roundSize: roundSizeFor(kid, date, plan),
+    ...planDay(kid, date),
     coreDone: 0,
     bonusDone: 0,
     playMs: 0,
@@ -278,7 +295,7 @@ export interface AnswerInput {
 export interface Recorded {
   outcome: AnswerOutcome
   targets: Targets
-  /** A Guess counts for nothing: no miss, no stats, no answer row. */
+  /** A Guess counts for nothing (no miss, no stats); it is only logged for the Parent. */
   guess: boolean
 }
 
@@ -288,7 +305,22 @@ export function recordAnswer(kid: KidState, input: AnswerInput): Recorded {
   const targets = targetsFor(kid, input.date, answer)
   const correct = input.given === answer
   const fact = kid.facts[factId(input.a, input.b)]
+  const row = (correct: boolean, fast: boolean): AnswerRow => ({
+    id: uid(),
+    ts: input.now.toISOString(),
+    date: input.date,
+    a: input.a,
+    b: input.b,
+    given: input.given,
+    correct,
+    ms: Math.round(input.ms),
+    targetMs: targets.targetMs,
+    baselineMs: targets.baselineMs,
+    fast,
+    round: input.round,
+  })
   if (isGuess(input.given, answer)) {
+    kid.outbox.push({ ...row(false, false), guess: true })
     const outcome = { correct: false, fast: false, legendFast: false, tierBefore: fact.tier, tierAfter: fact.tier }
     return { outcome, targets, guess: true }
   }
@@ -309,21 +341,7 @@ export function recordAnswer(kid: KidState, input: AnswerInput): Recorded {
   }
   if (outcome.fast) day.fast++
 
-  const row: AnswerRow = {
-    id: uid(),
-    ts: input.now.toISOString(),
-    date: input.date,
-    a: input.a,
-    b: input.b,
-    given: input.given,
-    correct,
-    ms: Math.round(input.ms),
-    targetMs: targets.targetMs,
-    baselineMs: targets.baselineMs,
-    fast: outcome.fast,
-    round: input.round,
-  }
-  kid.outbox.push(row)
+  kid.outbox.push(row(correct, outcome.fast))
   return { outcome, targets, guess: false }
 }
 
@@ -402,17 +420,41 @@ export function completeRound(kid: KidState, r: RoundDone, rng: Rng = Math.rando
     kid.bestSpeedRoundMs = r.roundMs
   }
 
-  // Core Rounds earn the Play Day; so does reaching the Daily Cap, so a slow
-  // Kid is never kept past 9 minutes for it.
-  let earned: EarnEvents | null = null
-  let chest: ChestReward | null = null
-  if (!day.earned && (day.coreDone >= day.plan.length || day.playMs >= dailyCapMs(kid))) {
-    earned = earnPlayDay(kid.journey, r.date)
-    day.earned = true
-    if (earned) chest = openChest(kid, rng)
-  }
+  // Core Rounds earn the Play Day; so does most of the Daily Cap, so a slow
+  // Kid is never kept past it for the Play Day.
+  const { earned, chest } = day.coreDone >= day.plan.length ? earnDay(kid, day, rng) : earnByTime(kid, day, rng)
   cutBatch(kid, r.date)
   return { earned, chest, newBest, capReached: day.playMs >= dailyCapMs(kid) }
+}
+
+function earnDay(kid: KidState, day: DayProgress, rng: Rng): Pick<RoundResult, 'earned' | 'chest'> {
+  if (day.earned) return { earned: null, chest: null }
+  const earned = earnPlayDay(kid.journey, day.date)
+  day.earned = true
+  return { earned, chest: earned ? openChest(kid, rng) : null }
+}
+
+function earnByTime(kid: KidState, day: DayProgress, rng: Rng): Pick<RoundResult, 'earned' | 'chest'> {
+  return day.playMs >= EARN_SHARE * dailyCapMs(kid) ? earnDay(kid, day, rng) : { earned: null, chest: null }
+}
+
+export interface RoundStopped {
+  /** Active play time of the stopped Round. */
+  playMs: number
+  date: ISODate
+}
+
+/**
+ * A Round stopped before its end: its time still counts. Returns the result
+ * when that time earns the Play Day (90% of the Daily Cap), else null.
+ */
+export function stopRound(kid: KidState, r: RoundStopped, rng: Rng = Math.random): RoundResult | null {
+  const day = ensureDay(kid, r.date)
+  day.playMs += r.playMs
+  const { earned, chest } = earnByTime(kid, day, rng)
+  if (!earned) return null
+  cutBatch(kid, r.date)
+  return { earned, chest, newBest: false, capReached: day.playMs >= dailyCapMs(kid) }
 }
 
 // ── Celebrations ─────────────────────────────────────────
@@ -540,7 +582,9 @@ export function cutBatch(kid: KidState, date: ISODate): Batch | null {
     kid.outbox = []
     return null
   }
-  const batch: Batch = { id: uid(), answers: kid.outbox, day: summary }
+  const guesses = kid.outbox.filter((a) => a.guess)
+  const batch: Batch = { id: uid(), answers: kid.outbox.filter((a) => !a.guess), day: summary }
+  if (guesses.length) batch.guesses = guesses
   kid.pending.push(batch)
   kid.outbox = []
   return batch
