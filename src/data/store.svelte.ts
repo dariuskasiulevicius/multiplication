@@ -4,6 +4,7 @@ import { applySheetSettings, migrateKid } from '../core/kid'
 import { uid } from '../core/rng'
 import type { KidState } from '../core/types'
 import type { SetupPayload } from '../core/setupLink'
+import { currentPush } from './push'
 import { pushBatches } from './sync'
 
 export type Screen =
@@ -87,9 +88,12 @@ export async function syncNow(): Promise<void> {
   if (!kid?.sync || kid.inactive || app.syncing || !navigator.onLine) return
   app.syncing = true
   try {
+    // The Play Reminder subscription goes along, so the sheet always has the current one.
+    const sub = await currentPush()
+    const push = sub === undefined ? undefined : (sub?.toJSON() ?? null)
     // A Sync sends at most 20 Batches; keep going until the backlog is empty.
     for (let i = 0; i < 10; i++) {
-      const { sent, settings, error } = await pushBatches($state.snapshot(kid) as KidState)
+      const { sent, settings, error } = await pushBatches($state.snapshot(kid) as KidState, push)
       if (error) {
         app.syncError = error
         if (error === 'inactive_device') kid.inactive = true

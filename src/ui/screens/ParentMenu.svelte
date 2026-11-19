@@ -4,6 +4,8 @@
   import { MAX_DAILY_MINUTES, MIN_DAILY_MINUTES, recentDays, setDailyMinutes, setRecallBudget } from '../../core/kid'
   import { countTiers, rankWeak } from '../../core/mastery'
   import type { KidState } from '../../core/types'
+  import { onMount } from 'svelte'
+  import { currentPush, disableReminders, enableReminders, reminderSupport } from '../../data/push'
   import { app, deleteKid, saveKid, syncNow } from '../../data/store.svelte'
   import { fetchSnapshot, fromSnapshot, snapshotOf } from '../../data/sync'
   import { i18n, seconds, t, type Key } from '../../i18n/index.svelte'
@@ -31,6 +33,33 @@
   async function setMinutes(minutes: number) {
     setDailyMinutes(kid, minutes, date)
     await saveKid()
+  }
+
+  // Play Reminders on this device
+  const support = reminderSupport()
+  let reminders = $state<'on' | 'off' | 'busy' | null>(null)
+  onMount(async () => {
+    reminders = (await currentPush()) ? 'on' : 'off'
+  })
+
+  async function remindersOn() {
+    if (!kid.sync) return
+    reminders = 'busy'
+    const r = await enableReminders(kid.sync)
+    if (r === 'on') {
+      reminders = 'on'
+      await sync()
+      return
+    }
+    reminders = 'off'
+    message = r === 'denied' ? t('remindersDenied') : t('remindersError', { error: errorText(r.error) })
+  }
+
+  async function remindersOff() {
+    reminders = 'busy'
+    await disableReminders()
+    reminders = 'off'
+    await sync()
   }
 
   async function sync() {
@@ -121,6 +150,25 @@
         />
       </label>
       <p class="muted small">{t('dailyMinutesHelp', { name: kid.name })}</p>
+    </section>
+
+    <section class="card stack">
+      <h2>🔔 {t('remindersTitle')}</h2>
+      {#if !kid.sync}
+        <p class="muted small">{t('remindersNeedSheet')}</p>
+      {:else if support === 'homeScreen'}
+        <p class="small">{t('remindersHomeScreen')}</p>
+      {:else if support === 'unsupported'}
+        <p class="muted small">{t('remindersUnsupported')}</p>
+      {:else}
+        <p class="small">{reminders === 'on' ? t('remindersOn', { name: kid.name }) : t('remindersHelp')}</p>
+        {#if reminders === 'on'}
+          <button class="btn ghost" onclick={remindersOff}>{t('remindersTurnOff')}</button>
+        {:else}
+          <button class="btn" disabled={reminders !== 'off'} onclick={remindersOn}>🔔 {t('remindersTurnOn')}</button>
+        {/if}
+        <p class="muted small">{t('remindersTimes')}</p>
+      {/if}
     </section>
 
     <section class="card stack">

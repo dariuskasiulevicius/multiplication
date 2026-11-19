@@ -33,6 +33,8 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],
         navigateFallback: 'index.html',
+        // Play Reminders: shows a notification for each push from the Family Sheet.
+        importScripts: ['push-sw.js'],
       },
     }),
   ],
